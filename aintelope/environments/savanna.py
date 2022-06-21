@@ -175,7 +175,7 @@ class RawEnv(AECEnv):
         self._cumulative_rewards = {agent: 0 for agent in self.agents}
         self.dones = {agent: False for agent in self.agents}
         self.infos = {agent: {} for agent in self.agents}
-        self.grass = np.random.randint(0, MAP_DIM, 2 * AMOUNT_GRASS).reshape(2, -1)
+        self.grass = np.random.randint(0, MAP_DIM, 2 * AMOUNT_GRASS).astype(Float).reshape(2, -1)
         self.state = {
             agent: np.random.randint(0, MAP_DIM, 2).astype(Float)
             for agent in self.agents
