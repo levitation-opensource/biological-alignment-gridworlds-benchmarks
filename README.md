@@ -42,3 +42,18 @@ See the `Makefile` for further instructions.
 ## Running
 
 Try `/bin/python3 aintelope/environments/savanna.py`.
+
+
+# Cygwin
+
+We have not managed to get aintelope to build under Windows/Cygwin!
+You need at least the following prerequisites:
+
+* Python: Cygwin modules Python 3.7 including python3-devel
+* Pytorch: https://github.com/KoichiYasuoka/CygTorch
+
+Problems:
+* Windows Python versions don't work with the poetry commands.
+* poetry shell doesn't work with paths with spaces.
+* Even with CygTorch pytorch-lightning can't find a Torch version.
+* other
