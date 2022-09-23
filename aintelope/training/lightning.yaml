@@ -1,5 +1,4 @@
 name: lightning_savanna_shardagent
-agent: shard_agent
 hparams:
   batch_size: 16
   lr: 0.001
@@ -7,6 +6,7 @@ hparams:
   env_entry_point: 'aintelope.environments.savanna_gym:SavannaGymEnv'
   env_type: 'gym'
   model: 'dqn'
+  agent: shard_agent
   gamma: 0.99
   sync_rate: 10
   replay_size: 99

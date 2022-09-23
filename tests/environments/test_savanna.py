@@ -10,10 +10,6 @@ from aintelope.aintelope.environments import savanna as sut
 # just the shared elements those will depend on
 
 
-def test_seed():
-    parallel_seed_test(sut.env, num_cycles=10, test_kept_state=True)
-
-
 def test_max_cycles():
     # currently the environment does not accept parameters like max_cycles
     # max_cycles_test(sut.env)
