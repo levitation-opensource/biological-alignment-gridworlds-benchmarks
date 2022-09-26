@@ -106,7 +106,7 @@ def test_step_result():
 
     agent = env.possible_agents[0]
     action = {agent: env.action_space(agent).sample()}
-    observations, rewards, dones, ifno = env.step(action)
+    observations, rewards, dones, info = env.step(action)
 
     assert not dones[agent]
     assert isinstance(observations, dict), "observations is not a dict"
