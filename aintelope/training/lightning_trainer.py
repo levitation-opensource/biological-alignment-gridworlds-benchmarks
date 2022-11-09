@@ -26,43 +26,17 @@ AVAIL_GPUS = min(1, torch.cuda.device_count())
 class DQNLightning(LightningModule):
     """Basic DQN Model."""
 
-    def __init__(
-        self,
-        batch_size: int = 16,
-        lr: float = 1e-3,
-        env: str = "savanna-v2",
-        gamma: float = 0.99,
-        sync_rate: int = 10,
-        replay_size: int = 1000,
-        warm_start_size: int = 1000,
-        eps_last_frame: int = 1000,
-        eps_start: float = 1.0,
-        eps_end: float = 0.01,
-        episode_length: int = 500,
-        warm_start_steps: int = 1000,
-        env_params: dict = {},
-        agent_params: dict = {}
-    ) -> None:
-        """
+    def __init__(self, hparams: DictConfig) -> None:
+        """Main model class
+
         Args:
-            batch_size: size of the batches
-            lr: learning rate
-            env: gym environment tag
-            gamma: discount factor
-            sync_rate: how many frames do we update the target network
-            replay_size: capacity of the replay buffer
-            warm_start_size: how many samples do we use to fill our buffer at
-                the start of training
-            eps_last_frame: what frame should epsilon stop decaying
-            eps_start: starting value of epsilon
-            eps_end: final value of epsilon
-            episode_length: max length of an episode
-            warm_start_steps: max episode reward in the environment
+            hparams (DictConfig): hyperparameter dictionary
         """
         super().__init__()
-        self.save_hyperparameters()
-        if self.hparams.env == 'savanna-v2':
-            self.env = SavannaEnv(env_params=env_params)
+        self.save_hyperparameters(hparams)
+
+        if self.hparams.env == "savanna-gym-v2":
+            self.env = SavannaGymEnv(env_params=self.hparams.env_params)
             obs_size = self.env.observation_space.shape[0]
         else:
             # GYM_INTERACTION
