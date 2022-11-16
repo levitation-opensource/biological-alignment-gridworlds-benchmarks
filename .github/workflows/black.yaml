@@ -1,0 +1,6 @@
+uses: RojerGS/python-black-check@master
+with:
+  line-length: '79'
+  path: '.'
+  include: ['aintelope', 'tests']
+  exclude: '(/*.html|/*.mo|/*.po|/*.png|/*.rst)'
