@@ -172,11 +172,11 @@ class DQNLightning(LightningModule):
 
         return OrderedDict({"loss": loss, "log": log, "progress_bar": status})
 
-    def record_step(self, nb_batch: int, record_file: Path) -> bool:
-        record_file.parent.mkdir(parents=True, exist_ok=True)
+    def record_step(self, nb_batch: int, record_path: Path) -> bool:
+        record_path.parent.mkdir(parents=True, exist_ok=True)
         if nb_batch == 0:
             init_string = "state,action,reward,done,shard_events,new_state\n"
-            with record_file.open("w", encoding="utf-8") as f:
+            with record_path.open("w", encoding="utf-8") as f:
                 f.write(init_string)
         device = "cpu"
         epsilon = max(
@@ -186,7 +186,7 @@ class DQNLightning(LightningModule):
 
         # step through environment with agent
         reward, done = self.agent.play_step(
-            self.net, epsilon, device, save_path=record_file
+            self.net, epsilon, device, save_path=record_path
         )
         self.episode_reward += reward
 
@@ -251,12 +251,12 @@ def run_experiment(cfg: DictConfig) -> None:
 
     trainer.fit(model, ckpt_path=checkpoint)
 
-    record_file = cfg.trainer_params.record_path / f"{cfg.timestamp}_records.csv"
+    record_path = cfg.trainer_params.record_path / f"{cfg.timestamp}_records.csv"
     count = 0
-    record_done = model.record_step(nb_batch=count, record_file=record_file)
+    record_done = model.record_step(nb_batch=count, record_path=record_path)
     while not record_done:
         count += 1
-        record_done = model.record_step(nb_batch=count, record_file=record_file)
+        record_done = model.record_step(nb_batch=count, record_path=record_path)
 
     # Notes
     # resume from a specific checkpoint
