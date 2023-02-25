@@ -1,7 +1,5 @@
 from gym import spaces
 import gym
-import functools
-import typing as typ
 
 import numpy as np
 from gym.spaces import Box, Discrete

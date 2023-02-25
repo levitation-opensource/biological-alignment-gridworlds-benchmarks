@@ -1,5 +1,3 @@
-import typing as typ
-
 import numpy as np
 from gemini import Scene, Sprite, txtcolours as tc, sleep
 
