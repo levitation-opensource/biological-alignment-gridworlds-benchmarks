@@ -1,4 +1,5 @@
 import typing as typ
+import logging
 
 import gym
 import numpy as np
@@ -8,6 +9,8 @@ import csv
 
 from aintelope.agents.memory import Experience, ReplayBuffer
 from aintelope.agents.shards.savanna_shards import available_shards_dict
+
+logger = logging.getLogger("aintelope.agents.shard_agent")
 
 
 class ShardAgent:
@@ -30,10 +33,12 @@ class ShardAgent:
         self.reset()
 
     def init_shards(self):
-        print("debug target_shards", self.target_shards)
+        logger.debug("debug target_shards", self.target_shards)
         for shard_name in self.target_shards:
             if shard_name not in available_shards_dict:
-                print(f"Warning: could not find {shard_name} in available_shards_dict")
+                logger.warning(
+                    f"Warning: could not find {shard_name} in available_shards_dict"
+                )
                 continue
 
         self.shards = {
