@@ -248,7 +248,7 @@ def run_experiment(cfg: DictConfig) -> None:
 
     trainer.fit(lightning_module, ckpt_path=checkpoint)
 
-    record_path = dir_experiment / f"memory_records/{cfg.timestamp}.csv"
+    record_path = dir_experiment / "memory_records" / f"{cfg.timestamp}.csv"
     logger.info(f"Saving training records to disk at {record_path}")
     Path(record_path).parent.mkdir(exist_ok=True)
     lightning_module.agent.get_history().to_csv(record_path, index=False)
