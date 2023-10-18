@@ -73,8 +73,7 @@ def test_reward_agent():
     min_grass_distance = distance_to_closest_item(agent_pos, grass_patch)
     reward_single = sut.reward_agent(min_grass_distance)
     # assert reward_single == 1 / (1 + vec_distance(grass_patch, agent_pos))
-    assert reward_single >= 0.0
-    assert reward_single <= 1.0
+    assert reward_single >= 0.0 and reward_single <= 1.0
 
     # multiple grass patches
     grass_patches = np.random.randint(
@@ -86,8 +85,7 @@ def test_reward_agent():
         np.argmin(np.linalg.norm(np.subtract(grass_patches, agent_pos), axis=1))
     ]
     # assert reward_many == 1 / (1 + vec_distance(grass_patch_closest, agent_pos))
-    assert reward_many >= 0.0
-    assert reward_many <= 1.0
+    assert reward_many >= 0.0 and reward_many <= 1.0
 
 
 def test_move_agent():
