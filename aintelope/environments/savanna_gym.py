@@ -64,10 +64,8 @@ class SavannaGymEnv(SavannaEnv, gym.Env):
         if options is None:
             options = {}
 
-        observations = SavannaEnv.reset(self, seed, options)
-        # FIXME: infos are additional information for the agent, like some position etc.
-        info = {"placeholder": "hmmm"}
-        return (observations[self._agent_id], info)
+        observations, info = SavannaEnv.reset(self, seed, options)
+        return (observations[self._agent_id], info[self._agent_id])
 
     @property
     def _agent_id(self):
