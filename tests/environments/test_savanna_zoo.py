@@ -49,7 +49,11 @@ def test_pettingzoo_api_sequential():
 
 
 def test_seed():
-    parallel_seed_test(sut.SavannaZooParallelEnv, 10)
+    try:
+        parallel_seed_test(sut.SavannaZooParallelEnv, num_cycles=10)
+    except TypeError:
+        # for some reason the test env in Git does not recognise the num_cycles neither as named or positional argument
+        parallel_seed_test(sut.SavannaZooParallelEnv)
 
 
 def test_agent_states():
