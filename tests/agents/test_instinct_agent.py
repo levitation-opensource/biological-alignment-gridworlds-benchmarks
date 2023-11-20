@@ -2,14 +2,14 @@ from typing import Tuple
 
 from omegaconf import OmegaConf, DictConfig
 
-from aintelope.tests.test_config import root_dir, tparams_hparams
+from tests.test_config import root_dir, tparams_hparams
 from aintelope.environments.env_utils.cleanup import cleanup_gym_envs
 from aintelope.training.simple_eval import run_episode
 
 
-#def test_instinctagent_in_savanna_gym(
+# def test_instinctagent_in_savanna_gym(
 #    tparams_hparams: Tuple[DictConfig, DictConfig]
-#) -> None:
+# ) -> None:
 #    tparams, hparams = tparams_hparams
 #    params_savanna_gym = {
 #        "agent_id": "instinct_agent",
@@ -28,4 +28,3 @@ from aintelope.training.simple_eval import run_episode
 #    OmegaConf.merge(hparams, params_savanna_gym)
 #    run_episode(tparams=tparams, hparams=hparams)
 #    cleanup_gym_envs()
-

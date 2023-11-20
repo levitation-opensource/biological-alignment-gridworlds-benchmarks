@@ -2,14 +2,14 @@ from typing import Tuple
 
 from omegaconf import OmegaConf, DictConfig
 
-from aintelope.tests.test_config import root_dir, tparams_hparams
+from tests.test_config import root_dir, tparams_hparams
 from aintelope.environments.env_utils.cleanup import cleanup_gym_envs
 from aintelope.training.simple_eval import run_episode
 
 
-#def test_randomwalkagent_in_savanna_gym(
+# def test_randomwalkagent_in_savanna_gym(
 #    tparams_hparams: Tuple[DictConfig, DictConfig]
-#) -> None:
+# ) -> None:
 #    tparams, hparams = tparams_hparams
 #    params_randomwalkagent = {
 #        "agent": "random_walk_agent",
@@ -31,9 +31,9 @@ from aintelope.training.simple_eval import run_episode
 #    cleanup_gym_envs()
 
 
-#def test_onestepperfectpredictionagent_in_savanna_gym(
+# def test_onestepperfectpredictionagent_in_savanna_gym(
 #    tparams_hparams: Tuple[DictConfig, DictConfig]
-#) -> None:
+# ) -> None:
 #    tparams, hparams = tparams_hparams
 #    params_perfectpredictionagent = {
 #        "agent": "one_step_perfect_prediction_agent",
@@ -55,9 +55,9 @@ from aintelope.training.simple_eval import run_episode
 #    cleanup_gym_envs()
 
 
-#def test_iterativeweightoptimizationagent_in_savanna_gym(
+# def test_iterativeweightoptimizationagent_in_savanna_gym(
 #    tparams_hparams: Tuple[DictConfig, DictConfig]
-#) -> None:
+# ) -> None:
 #    tparams, hparams = tparams_hparams
 #    params_weightoptimizationagent = {
 #        "agent": "iterative_weight_optimization_agent",
