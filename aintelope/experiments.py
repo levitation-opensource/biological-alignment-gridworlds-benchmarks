@@ -2,12 +2,19 @@ from collections import namedtuple
 
 import logging
 from omegaconf import DictConfig
-#import hydra
+
+# import hydra
 import os
 
 from pettingzoo import AECEnv, ParallelEnv
-from aintelope.environments.savanna_zoo import SavannaZooParallelEnv
-from aintelope.environments.savanna_safetygrid import SavannaGridworldParallelEnv
+from aintelope.environments.savanna_zoo import (
+    SavannaZooParallelEnv,
+    SavannaZooSequentialEnv,
+)
+from aintelope.environments.savanna_safetygrid import (
+    SavannaGridworldParallelEnv,
+    SavannaGridworldSequentialEnv,
+)
 from aintelope.environments.savanna_safetygrid import SavannaGridworldSequentialEnv
 
 from aintelope.models.dqn import DQN
@@ -26,14 +33,23 @@ def run_experiment(cfg: DictConfig) -> None:
     logger = logging.getLogger("aintelope.experiment")
 
     # Environment
-    # env = SavannaZooParallelEnv(   # TODO
-    # env = SavannaGridworldParallelEnv(
-    env = SavannaGridworldSequentialEnv(
-        env_params=cfg.hparams.env_params
-    )  # TODO: get env from parameters
+    hparams = cfg.hparams
+    if hparams.env == "savanna-zoo-parallel-v2":
+        env = SavannaZooParallelEnv(env_params=hparams.env_params)
+    elif hparams.env == "savanna-safetygrid-parallel-v1":
+        env = SavannaGridworldParallelEnv(env_params=hparams.env_params)
+    elif hparams.env == "savanna-zoo-sequential-v2":
+        env = SavannaZooSequentialEnv(env_params=hparams.env_params)
+    elif hparams.env == "savanna-safetygrid-sequential-v1":
+        env = SavannaGridworldSequentialEnv(env_params=hparams.env_params)
+    else:
+        raise NotImplementedError()
+
     action_space = env.action_space
     observation, info = env.reset()  # TODO: each agent has their own state, refactor
-    n_observations = len(observation)
+    n_observations = len(
+        observation["agent_0"]
+    )  # TODO: each agent has their own observation size    # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
 
     # Common trainer for each agent's models
     trainer = Trainer(
@@ -70,8 +86,7 @@ def run_experiment(cfg: DictConfig) -> None:
             dones[agent.id] = False
 
         for step in range(cfg.hparams.env_params.num_iters):
-
-            if isinstance(env, ParallelEnv): 
+            if isinstance(env, ParallelEnv):
                 # loop: get observations and collect actions
                 actions = {}
                 for agent in agents:
@@ -104,10 +119,18 @@ def run_experiment(cfg: DictConfig) -> None:
                     action = agent.get_action(observation, step)
 
                     # Env step
-                    observation, score, terminated, truncated, info = env.step_single_agent(action) # TODO: step_single_agent needs to be called in the order that environment expects. Recommend to use step_multiple_agents instead
+                    (
+                        observation,
+                        score,
+                        terminated,
+                        truncated,
+                        info,
+                    ) = env.step_single_agent(
+                        action
+                    )  # TODO: step_single_agent needs to be called in the order that environment expects. Recommend to use step_multiple_agents instead
                     done = terminated or truncated
 
-                    # Agent is updated based on what the env shows. All commented above included ^                
+                    # Agent is updated based on what the env shows. All commented above included ^
                     dones[agent.id] = done
                     if terminated:
                         observation = None
@@ -117,7 +140,6 @@ def run_experiment(cfg: DictConfig) -> None:
 
             else:
                 raise NotImplementedError(f"Unknown environment type {type(env)}")
-
 
             # Perform one step of the optimization (on the policy network)
             trainer.optimize_models(step)

@@ -47,7 +47,7 @@ class DQNLightning(LightningModule):
         self.save_hyperparameters(hparams)  # make hparams available as self.hparams
 
         if hparams.env == "savanna-zoo-parallel-v2":
-            self.env = SavannaGridworldParallelEnv(env_params=hparams.env_params)
+            self.env = SavannaZooParallelEnv(env_params=hparams.env_params)
             # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
             obs_size = self.env.observation_space("agent_0").shape[0]
             n_actions = self.env.action_space("agent_0").n
@@ -60,7 +60,7 @@ class DQNLightning(LightningModule):
             n_actions = self.env.action_space("agent_0").n
 
         elif hparams.env == "savanna-zoo-sequential-v2":
-            self.env = SavannaGridworldSequentialEnv(env_params=hparams.env_params)
+            self.env = SavannaZooSequentialEnv(env_params=hparams.env_params)
             # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
             obs_size = self.env.observation_space("agent_0").shape[0]
             n_actions = self.env.action_space("agent_0").n

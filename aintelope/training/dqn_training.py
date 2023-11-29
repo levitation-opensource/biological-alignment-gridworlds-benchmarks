@@ -65,19 +65,21 @@ class Trainer:
         # tb-logging and device control, check lightning_Trainer for 'AVAIL'
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.optimizer = optim.AdamW(
-            DQN(self.n_observations, self.action_space("agent_0").n).parameters(),    # TODO: multi-agent handling
+            DQN(
+                self.n_observations, self.action_space("agent_0").n
+            ).parameters(),  # TODO: multi-agent handling
             lr=self.hparams.lr,
             amsgrad=True,
         )  # refactor, making a dummy network now. problem is add_agent inits first real network---v
 
     def add_agent(self, agent_id):
         self.replay_memories[agent_id] = ReplayMemory(self.hparams.replay_size)
-        self.policy_nets[agent_id] = DQN(self.n_observations, self.action_space(agent_id).n).to(
-            self.device
-        )
-        self.target_nets[agent_id] = DQN(self.n_observations, self.action_space(agent_id).n).to(
-            self.device
-        )
+        self.policy_nets[agent_id] = DQN(
+            self.n_observations, self.action_space(agent_id).n
+        ).to(self.device)
+        self.target_nets[agent_id] = DQN(
+            self.n_observations, self.action_space(agent_id).n
+        ).to(self.device)
         self.target_nets[agent_id].load_state_dict(
             self.policy_nets[agent_id].state_dict()
         )

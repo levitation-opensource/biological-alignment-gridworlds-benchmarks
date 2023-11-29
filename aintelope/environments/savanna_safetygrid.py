@@ -148,7 +148,9 @@ class GridworldZooBaseEnv:
         for x in info[INFO_OBSERVATION_COORDINATES].get(DRINK_CHR, []):
             agent_observations += list(x)  # convert tuple to list
 
-        agent_observations = np.array(agent_observations)
+        agent_observations = np.array(
+            agent_observations, np.float32
+        )  # NB! Q-agent expects float32 observation type
 
         assert (
             agent_observations.shape == self.observation_space(agent).shape
@@ -283,7 +285,9 @@ class SavannaGridworldParallelEnv(GridworldZooBaseEnv, GridworldZooParallelEnv):
     #        observations2[agent] = self.transform_observation(agent, infos[agent])
     #    return observations2, infos
 
-    def reset(self, seed: Optional[int] = None, options=None) -> Tuple[Dict[AgentId, Observation], Dict[AgentId, Info]]:
+    def reset(
+        self, seed: Optional[int] = None, options=None
+    ) -> Tuple[Dict[AgentId, Observation], Dict[AgentId, Info]]:
         observations, infos = GridworldZooParallelEnv.reset(self)
         self._last_infos = infos
         # transform observations
@@ -291,7 +295,7 @@ class SavannaGridworldParallelEnv(GridworldZooBaseEnv, GridworldZooParallelEnv):
             self.observations2[agent] = self.transform_observation(agent, infos[agent])
         return self.observations2, infos
 
-    def observe(self, agent = None) -> Union[Dict[AgentId, Observation], Observation]:
+    def observe(self, agent=None) -> Union[Dict[AgentId, Observation], Observation]:
         if agent is None:
             return self.observations2
         else:
@@ -364,7 +368,9 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
     #    # self._last_infos = infos
     #    return observations2, infos
 
-    def reset(self, seed: Optional[int] = None, options=None) -> Tuple[Dict[AgentId, Observation], Dict[AgentId, Info]]:
+    def reset(
+        self, seed: Optional[int] = None, options=None
+    ) -> Tuple[Dict[AgentId, Observation], Dict[AgentId, Info]]:
         GridworldZooAecEnv.reset(self)
 
         # observe observations, transform observations
@@ -377,7 +383,7 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
         self._last_infos = infos
         return self.observations2, infos
 
-    def observe(self, agent = None) -> Union[Dict[AgentId, Observation], Observation]:
+    def observe(self, agent=None) -> Union[Dict[AgentId, Observation], Observation]:
         if agent is None:
             return self.observations2
         else:
@@ -414,9 +420,7 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
 
         self._last_infos[agent] = info
 
-        logger.debug(
-            "debug return", observation2, reward2, terminated, truncated, info
-        )
+        logger.debug("debug return", observation2, reward2, terminated, truncated, info)
         return observation2, reward2, terminated, truncated, info
 
     def step_multiple_agents(self, actions: Dict[str, Action]) -> Step:
