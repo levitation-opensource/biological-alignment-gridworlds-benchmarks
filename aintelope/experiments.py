@@ -53,7 +53,8 @@ def run_experiment(cfg: DictConfig) -> None:
                 **cfg.hparams.agent_params,
             )
         )
-        agents[-1].reset(env.observe(agent_id))
+        observation = env.observe(agent_id)
+        agents[-1].reset(observation)
         trainer.add_agent(agent_id)
 
     # Warmup not supported atm, would be here
@@ -70,15 +71,14 @@ def run_experiment(cfg: DictConfig) -> None:
 
         for step in range(cfg.hparams.env_params.num_iters):
 
-
             if isinstance(env, ParallelEnv): 
-                # loop: observe and collect actions
+                # loop: get observations and collect actions
                 actions = {}
                 for agent in agents:
                     observation = env.observe(agent.id)
                     actions[agent.id] = agent.get_action(observation, step)
 
-                # call: send actions and observe
+                # call: send actions and get observations
                 observations, scores, terminateds, truncateds, _ = env.step(actions)
                 dones = {
                     key: terminated or truncateds[key]
@@ -87,20 +87,18 @@ def run_experiment(cfg: DictConfig) -> None:
 
                 # loop: update
                 for agent in agents:
-                    dones[agent.id] = done
                     observation = observations[agent.id]
+                    score = scores[agent.id]
+                    done = dones[agent.id]
+                    terminated = terminateds[agent.id]
                     if terminated:
                         observation = None
                     agent.update(
                         env, observation, score, done
                     )  # note that score is used ONLY by baseline
 
-                    # Perform one step of the optimization (on the policy network)
-                    trainer.optimize_models(step)
-
-
-            if isinstance(env, AECEnv):
-
+            elif isinstance(env, AECEnv):
+                # loop: observe, collect action, send action, get observation, update
                 for agent in agents:
                     observation = env.observe(agent.id)
                     action = agent.get_action(observation, step)
@@ -117,8 +115,12 @@ def run_experiment(cfg: DictConfig) -> None:
                         env, observation, score, done
                     )  # note that score is used ONLY by baseline
 
-                    # Perform one step of the optimization (on the policy network)
-                    trainer.optimize_models(step)
+            else:
+                raise NotImplementedError(f"Unknown environment type {type(env)}")
+
+
+            # Perform one step of the optimization (on the policy network)
+            trainer.optimize_models(step)
 
             # Break when all agents are done
             if all(dones.values()):

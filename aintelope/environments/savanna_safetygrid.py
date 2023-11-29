@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Tuple, NamedTuple
+from typing import Dict, List, Optional, Tuple, NamedTuple, Union
 import logging
 from collections import namedtuple
 
@@ -131,7 +131,7 @@ class GridworldZooBaseEnv:
 
         qqq = True  # for debugging
 
-    # this method has no side effectss
+    # this method has no side effects
     def transform_observation(self, agent: str, info) -> npt.NDArray[ObservationFloat]:
         # NB! So far the savanna code has been using absolute coordinates, not relative coordinates.
         # In case of relative coordinates, sometimes an object might be outside of agent's observation distance.
@@ -269,6 +269,7 @@ class SavannaGridworldParallelEnv(GridworldZooBaseEnv, GridworldZooParallelEnv):
         GridworldZooParallelEnv.__init__(self, **self.super_initargs)
         self.init_observation_spaces()
         self._last_infos = {}
+        self.observations2 = {}
 
     # def observe_from_location(self, agents_coordinates: Dict):
     #    """This method is read-only (does not change the actual state of the environment nor the actual state of agents).
@@ -282,14 +283,19 @@ class SavannaGridworldParallelEnv(GridworldZooBaseEnv, GridworldZooParallelEnv):
     #        observations2[agent] = self.transform_observation(agent, infos[agent])
     #    return observations2, infos
 
-    def reset(self, seed: Optional[int] = None, options=None):
+    def reset(self, seed: Optional[int] = None, options=None) -> Tuple[Dict[AgentId, Observation], Dict[AgentId, Info]]:
         observations, infos = GridworldZooParallelEnv.reset(self)
         self._last_infos = infos
         # transform observations
-        observations2 = {}
         for agent in infos.keys():
-            observations2[agent] = self.transform_observation(agent, infos[agent])
-        return observations2, infos
+            self.observations2[agent] = self.transform_observation(agent, infos[agent])
+        return self.observations2, infos
+
+    def observe(self, agent = None) -> Union[Dict[AgentId, Observation], Observation]:
+        if agent is None:
+            return self.observations2
+        else:
+            return self.observations2[agent]
 
     def step(self, actions: Dict[str, Action]) -> Step:
         """step(action) takes in an action for each agent and should return the
@@ -315,20 +321,19 @@ class SavannaGridworldParallelEnv(GridworldZooBaseEnv, GridworldZooParallelEnv):
         ) = GridworldZooParallelEnv.step(self, actions)
         self._last_infos = infos
 
-        observations2 = {}
         rewards2 = {}
 
         # transform observations and rewards
         for agent in infos.keys():
-            observations2[agent] = self.transform_observation(agent, infos[agent])
+            self.observations2[agent] = self.transform_observation(agent, infos[agent])
 
             min_grass_distance = self.calc_min_grass_distance(agent, infos[agent])
             rewards2[agent] = self.reward_agent(min_grass_distance)
 
         logger.debug(
-            "debug return", observations2, rewards, terminateds, truncateds, infos
+            "debug return", self.observations2, rewards, terminateds, truncateds, infos
         )
-        return observations2, rewards2, terminateds, truncateds, infos
+        return self.observations2, rewards2, terminateds, truncateds, infos
 
 
 class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
@@ -341,6 +346,7 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
         GridworldZooAecEnv.__init__(self, **self.super_initargs)
         self.init_observation_spaces()
         self._last_infos = {}
+        self.observations2 = {}
 
     # def observe_from_location(self, agents_coordinates: Dict):
     #    """This method is read-only (does not change the actual state of the environment nor the actual state of agents).
@@ -358,19 +364,24 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
     #    # self._last_infos = infos
     #    return observations2, infos
 
-    def reset(self, seed: Optional[int] = None, options=None):
+    def reset(self, seed: Optional[int] = None, options=None) -> Tuple[Dict[AgentId, Observation], Dict[AgentId, Info]]:
         GridworldZooAecEnv.reset(self)
 
         # observe observations, transform observations
-        observations2 = {}
         infos = {}
         for agent in self.possible_agents:
             info = self.observe_info(agent)
             infos[agent] = info
-            observations2[agent] = self.transform_observation(agent, info)
+            self.observations2[agent] = self.transform_observation(agent, info)
 
         self._last_infos = infos
-        return observations2, infos
+        return self.observations2, infos
+
+    def observe(self, agent = None) -> Union[Dict[AgentId, Observation], Observation]:
+        if agent is None:
+            return self.observations2
+        else:
+            return self.observations2[agent]
 
     def step_single_agent(self, action: Action) -> Step:
         """step(action) takes in an action for each agent and should return the
@@ -393,6 +404,7 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
         info = self.observe_info(agent)
         # self.observe_from_location({agent: [1, 1]})    # for debugging
         observation2 = self.transform_observation(agent, info)
+        self.observations2[agent] = observation2
 
         min_grass_distance = self.calc_min_grass_distance(agent, info)
         reward2 = self.reward_agent(min_grass_distance)
@@ -423,7 +435,6 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
             return {}, {}, {}, {}, {}
 
         alive_agents = []
-        observations2 = {}
         rewards2 = {}
         infos = {}
 
@@ -447,7 +458,7 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
                 info = self.observe_info(agent)
                 # self.observe_from_location({agent: [1, 1]})    # for debugging
                 infos[agent] = info
-                observations2[agent] = self.transform_observation(agent, info)
+                self.observations2[agent] = self.transform_observation(agent, info)
 
                 min_grass_distance = self.calc_min_grass_distance(agent, info)
                 rewards2[agent] = self.reward_agent(min_grass_distance)
@@ -460,7 +471,7 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
                 info = self.observe_info(agent)
                 # self.observe_from_location({agent: [1, 1]})    # for debugging
                 infos[agent] = info
-                observations2[agent] = self.transform_observation(agent, info)
+                self.observations2[agent] = self.transform_observation(agent, info)
 
                 min_grass_distance = self.calc_min_grass_distance(agent, info)
                 rewards2[agent] = self.reward_agent(min_grass_distance)
@@ -471,6 +482,6 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
         self._last_infos = infos
 
         logger.debug(
-            "debug return", observations2, rewards2, terminateds, truncateds, infos
+            "debug return", self.observations2, rewards2, terminateds, truncateds, infos
         )
-        return observations2, rewards2, terminateds, truncateds, infos
+        return self.observations2, rewards2, terminateds, truncateds, infos
