@@ -114,7 +114,7 @@ def run_experiment(cfg: DictConfig) -> None:
 
             elif isinstance(env, AECEnv):
                 # loop: observe, collect action, send action, get observation, update
-                for agent in agents:
+                for agent in agents:    # TODO: the order of agents needs to be obtained from env
                     observation = env.observe(agent.id)
                     action = agent.get_action(observation, step)
 
@@ -127,7 +127,7 @@ def run_experiment(cfg: DictConfig) -> None:
                         info,
                     ) = env.step_single_agent(
                         action
-                    )  # TODO: step_single_agent needs to be called in the order that environment expects. Recommend to use step_multiple_agents instead
+                    )
                     done = terminated or truncated
 
                     # Agent is updated based on what the env shows. All commented above included ^

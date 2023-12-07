@@ -80,6 +80,7 @@ class GridworldZooBaseEnv:
         "action_direction_mode": 0,  # TODO: Joel wanted to use relative direction, so need to use mode 1 or 2 in this case    # 0 - fixed, 1 - relative, depending on last move, 2 - relative, controlled by separate turning actions.
         "map_randomization_frequency": 1,  # TODO   # 0 - off, 1 - once per experiment run, 2 - once per trial (a trial is a sequence of training episodes separated by env.reset call, but using a same model instance), 3 - once per training episode.
         "remove_unused_tile_types_from_layers": True,  # Whether to remove tile types not present on initial map from observation layers. - set to False when same agent brain is trained over multiple environments
+        "observe_bitmap_layers": True,     # Alternate observation format to current vector of absolute coordinates. Bitmap representation enables representing objects which might be outside of agent's observation zone for time being.
     }
 
     def __init__(self, env_params: Optional[Dict] = None):
@@ -111,12 +112,10 @@ class GridworldZooBaseEnv:
             ],  # Whether to remove tile types not present on initial map from observation layers. - set to False when same agent brain is trained over multiple environments
         }
 
-    def init_observation_spaces(self):
-        # for @zoo-api
-        # self._action_spaces = {
-        #    agent: Discrete(4) for agent in self.possible_agents
-        # }  # agents can walk in 4 directions
+        self.observe_bitmap_layers = self.metadata["observe_bitmap_layers"]
 
+
+    def init_observation_spaces(self):
         # for @zoo-api
         self.transformed_observation_spaces = {
             agent: Box(
@@ -140,30 +139,35 @@ class GridworldZooBaseEnv:
 
     # this method has no side effects
     def transform_observation(self, agent: str, info) -> npt.NDArray[ObservationFloat]:
-        # NB! So far the savanna code has been using absolute coordinates, not relative coordinates.
-        # In case of relative coordinates, sometimes an object might be outside of agent's observation distance.
-        # If you want to return object location as agent-centric boolean bitmap, then it is easy to set all cells to False. But with coordinates you need either special values or an additional boolean dimension which indicates whether the coordinate is available or not.
 
-        # TODO: import agent char map from env instead
-        agent_observations = []
-        for agent_name, agent_chr in self.agent_name_mapping.items():
-            agent_observations += list(
-                info[INFO_OBSERVATION_COORDINATES][agent_chr][0]
-            )  # convert tuple to list
-        for x in info[INFO_OBSERVATION_COORDINATES].get(FOOD_CHR, []):
-            agent_observations += list(x)  # convert tuple to list
-        for x in info[INFO_OBSERVATION_COORDINATES].get(DRINK_CHR, []):
-            agent_observations += list(x)  # convert tuple to list
+        if self.observe_bitmap_layers:
+            return info[INFO_OBSERVATION_LAYERS_CUBE]
 
-        agent_observations = np.array(
-            agent_observations, np.float32
-        )  # NB! Q-agent expects float32 observation type
+        else:
+            # NB! So far the savanna code has been using absolute coordinates, not relative coordinates.
+            # In case of relative coordinates, sometimes an object might be outside of agent's observation distance.
+            # If you want to return object location as agent-centric boolean bitmap, then it is easy to set all cells to False. But with coordinates you need either special values or an additional boolean dimension which indicates whether the coordinate is available or not.
 
-        assert (
-            agent_observations.shape == self.observation_space(agent).shape
-        ), "observation / observation space shape mismatch"
+            # TODO: import agent char map from env instead
+            agent_observations = []
+            for agent_name, agent_chr in self.agent_name_mapping.items():
+                agent_observations += list(
+                    info[INFO_OBSERVATION_COORDINATES][agent_chr][0]
+                )  # convert tuple to list
+            for x in info[INFO_OBSERVATION_COORDINATES].get(FOOD_CHR, []):
+                agent_observations += list(x)  # convert tuple to list
+            for x in info[INFO_OBSERVATION_COORDINATES].get(DRINK_CHR, []):
+                agent_observations += list(x)  # convert tuple to list
 
-        return agent_observations
+            agent_observations = np.array(
+                agent_observations, np.float32
+            )  # NB! Q-agent expects float32 observation type
+
+            assert (
+                agent_observations.shape == self.observation_space(agent).shape
+            ), "observation / observation space shape mismatch"
+
+            return agent_observations
 
     @property
     def grass_patches(self):
@@ -189,11 +193,11 @@ class GridworldZooBaseEnv:
             water_holes = np.zeros([0, 2])
         return water_holes
 
-    def observe_from_location(self, agents_coordinates: Dict):
+    def observe_from_location(self, agents_coordinates: Dict, agents_directions: Dict = None):
         """This method is read-only (does not change the actual state of the environment nor the actual state of agents).
         Each given agent observes itself and the environment as if the agent was in the given location.
         """
-        infos = super().observe_infos_from_location(agents_coordinates)
+        infos = super().observe_infos_from_location(agents_coordinates, agents_directions)
         # transform observations
         observations2 = {}
         for agent in infos.keys():
@@ -216,9 +220,6 @@ class GridworldZooBaseEnv:
 
     def observation_space(self, agent):
         return self.transformed_observation_spaces[agent]
-
-    # def action_space(self, agent):
-    #    return self.action_spaces[agent]
 
     # called by DQNLightning
     def state_to_namedtuple(self, state: npt.NDArray[ObservationFloat]) -> NamedTuple:
@@ -245,23 +246,44 @@ class GridworldZooBaseEnv:
         StateTuple = namedtuple("StateTuple", {k: np.ndarray for k in keys})
         return StateTuple(**agent_coords, **grass_patches_coords, **water_holes_coords)
 
-    # def observe(self, agent: str) -> npt.NDArray[ObservationFloat]:
-    #    """Return observation of given agent."""
+    # This API is intended primarily as input for the neural network.
+    # if observe_bitmap_layers == True then observe() method returns same value as observe_relative_bitmaps()
+    # Relative observation bitmap is agent centric and considers the agent's observation radius. Environments with different sizes will have same-shaped relative observation bitmaps as long as the agent's observation radius is same.
+    # if observe_bitmap_layers == False then the agent currently returns vector of coordinates compatible with the old Savanna agent implementation.
+    def observe(self, agent=None) -> Union[Dict[AgentId, Observation], Observation]:
+        if agent is None:
+            return self.observations2
+        else:
+            return self.observations2[agent]
 
-    #    def stack(*args) -> npt.NDArray[ObservationFloat]:
-    #        return np.hstack(args, dtype=ObservationFloat)
+    # This API is intended primarily as input for the neural network. Relative observation bitmap is agent centric and considers the agent's observation radius. Environments with different sizes will have same-shaped relative observation bitmaps as long as the agent's observation radius is same.
+    # if observe_bitmap_layers == True then observe() method returns same value as observe_relative_bitmaps()
+    def observe_relative_bitmaps(self, agent=None) -> Union[Dict[AgentId, Observation], Observation]:
+        iif agent is None:
+            return { agent: self._last_infos[agent][INFO_AGENT_OBSERVATION_LAYERS_CUBE] for agent in self._last_infos.keys() }
+        else:
+            return self._last_infos[agent][INFO_AGENT_OBSERVATION_LAYERS_CUBE]
 
-    #    observations = stack(self.agent_states[agent])
-    #    for x in self.grass_patches:
-    #        observations = stack(observations, x)
-    #    for x in self.water_holes:
-    #        observations = stack(observations, x)
-    #    # just put all positions into one row
-    #    res = observations.reshape(-1)
-    #    assert (
-    #        res.shape == next(iter(self._observation_spaces.values())).shape
-    #    ), "observation / observation space shape mismatch"
-    #    return res
+    # This API is intended primarily as alternate observation format input for the neural network. But please consider that absolute bitmaps are less flexible because different environments may have absolute bitmaps with different sizes. Also, absolute bitmaps are less convincing from the agent embodyment perspective.
+    def observe_absolute_bitmaps(self, agent=None) -> Union[Dict[AgentId, Observation], Observation]:
+        if agent is None:
+            return { agent: self._last_infos[agent][INFO_OBSERVATION_LAYERS_CUBE] for agent in self._last_infos.keys() }
+        else:
+            return self._last_infos[agent][INFO_OBSERVATION_LAYERS_CUBE]
+
+    # This API might be useful as input to instincts. For instincts it has more convenient data format than bitmap.
+    def observe_relative_coordinates(self, agent=None) -> Union[Dict[AgentId, Observation], Observation]:
+        if agent is None:
+            return { agent: self._last_infos[agent][INFO_AGENT_OBSERVATION_COORDINATES] for agent in self._last_infos.keys() }
+        else:
+            return self._last_infos[agent][INFO_AGENT_OBSERVATION_COORDINATES]
+
+    # This API might be useful as input to instincts. For instincts it has more convenient data format than bitmap.
+    def observe_absolute_coordinates(self, agent=None) -> Union[Dict[AgentId, Observation], Observation]:
+        if agent is None:
+            return { agent: self._last_infos[agent][INFO_OBSERVATION_COORDINATES] for agent in self._last_infos.keys() }
+        else:
+            return self._last_infos[agent][INFO_OBSERVATION_COORDINATES]
 
     # @functools.lru_cache(maxsize=None)
     # def observation_space(self, agent: str):
@@ -290,7 +312,7 @@ class SavannaGridworldParallelEnv(GridworldZooBaseEnv, GridworldZooParallelEnv):
     #    observations2 = {}
     #    for agent in infos.keys():
     #        observations2[agent] = self.transform_observation(agent, infos[agent])
-    #    return observations2, infos
+    #    return observations2
 
     def reset(
         self, seed: Optional[int] = None, options=None
@@ -301,12 +323,6 @@ class SavannaGridworldParallelEnv(GridworldZooBaseEnv, GridworldZooParallelEnv):
         for agent in infos.keys():
             self.observations2[agent] = self.transform_observation(agent, infos[agent])
         return self.observations2, infos
-
-    def observe(self, agent=None) -> Union[Dict[AgentId, Observation], Observation]:
-        if agent is None:
-            return self.observations2
-        else:
-            return self.observations2[agent]
 
     def step(self, actions: Dict[str, Action]) -> Step:
         """step(action) takes in an action for each agent and should return the
@@ -373,7 +389,7 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
     #        observations2[agent] = self.transform_observation(agent, info)
 
     #    # self._last_infos = infos
-    #    return observations2, infos
+    #    return observations2
 
     def reset(
         self, seed: Optional[int] = None, options=None
@@ -389,12 +405,6 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
 
         self._last_infos = infos
         return self.observations2, infos
-
-    def observe(self, agent=None) -> Union[Dict[AgentId, Observation], Observation]:
-        if agent is None:
-            return self.observations2
-        else:
-            return self.observations2[agent]
 
     def step_single_agent(self, action: Action) -> Step:
         """step(action) takes in an action for each agent and should return the

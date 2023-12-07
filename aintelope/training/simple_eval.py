@@ -4,7 +4,7 @@ import gymnasium as gym
 
 from omegaconf import DictConfig
 
-from aintelope.agents.q_agent import Agent as Qagent
+from aintelope.agents.q_agent import QAgent
 from aintelope.agents.instinct_agent import InstinctAgent
 from aintelope.agents.simple_agents import (
     RandomWalkAgent,
@@ -27,7 +27,7 @@ logger = logging.getLogger("aintelope.training.simple_eval")
 # is there a better way to do this?
 # to register a lookup table from hparam name to function?
 AGENT_LOOKUP = {
-    "q_agent": Qagent,
+    "q_agent": QAgent,
     "instinct_agent": InstinctAgent,
     "random_walk_agent": RandomWalkAgent,
     "one_step_perfect_prediction_agent": OneStepPerfectPredictionAgent,
