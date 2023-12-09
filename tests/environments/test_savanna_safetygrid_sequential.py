@@ -12,6 +12,7 @@ from pettingzoo.test import (
 )
 from pettingzoo.test import api_test
 from pettingzoo.test.seed_test import seed_test
+
 # from pettingzoo.utils import parallel_to_aec
 
 
@@ -21,9 +22,11 @@ from aintelope.environments.savanna_safetygrid import SavannaGridworldSequential
 from aintelope.environments.env_utils.distance import distance_to_closest_item
 
 
-def test_gridworlds_api_sequential():      
+def test_gridworlds_api_sequential():
     # TODO: generally this test suite passes, but there are errors related to multi-objective rewards which Zoo api_test.py does not know how to handle
     pass
+
+
 #    # TODO: refactor these values out to a test-params file
 #    env_params = {
 #        "num_iters": 500,  # duration of the game
@@ -73,13 +76,17 @@ def test_gridworlds_step_result():
 
     env.step(action)
     # NB! env.last() provides observation from NEXT agent in case of multi-agent environment
-    observation, reward, terminated, truncated, info = env.last()    # TODO: multi-agent iteration
+    (
+        observation,
+        reward,
+        terminated,
+        truncated,
+        info,
+    ) = env.last()  # TODO: multi-agent iteration
     done = terminated or truncated
 
     assert not done
-    assert isinstance(
-        observation, np.ndarray
-    ), "observation of agent is not an array"
+    assert isinstance(observation, np.ndarray), "observation of agent is not an array"
     assert isinstance(reward, np.float64), "reward of agent is not a float64"
 
 
@@ -120,7 +127,7 @@ def test_gridworlds_action_spaces():
 
     for agent in env.possible_agents:
         assert isinstance(env.action_space(agent), MultiDiscrete)
-        assert env.action_space(agent).n == 5   # includes no-op
+        assert env.action_space(agent).n == 5  # includes no-op
 
 
 def test_gridworlds_action_space_valid_step():

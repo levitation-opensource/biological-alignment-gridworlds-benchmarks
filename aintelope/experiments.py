@@ -114,7 +114,9 @@ def run_experiment(cfg: DictConfig) -> None:
 
             elif isinstance(env, AECEnv):
                 # loop: observe, collect action, send action, get observation, update
-                for agent in agents:    # TODO: the order of agents needs to be obtained from env
+                for (
+                    agent
+                ) in agents:  # TODO: the order of agents needs to be obtained from env
                     observation = env.observe(agent.id)
                     action = agent.get_action(observation, step)
 
@@ -125,9 +127,7 @@ def run_experiment(cfg: DictConfig) -> None:
                         terminated,
                         truncated,
                         info,
-                    ) = env.step_single_agent(
-                        action
-                    )
+                    ) = env.step_single_agent(action)
                     done = terminated or truncated
 
                     # Agent is updated based on what the env shows. All commented above included ^

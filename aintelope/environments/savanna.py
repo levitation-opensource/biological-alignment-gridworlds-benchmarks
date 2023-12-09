@@ -192,7 +192,9 @@ class SavannaEnv:
         self.human_render_state = None
         self.ascii_render_state = None
         self.dones = None
-        self.infos = { agent: {} for agent in self.possible_agents }   # needed for Zoo sequential API
+        self.infos = {
+            agent: {} for agent in self.possible_agents
+        }  # needed for Zoo sequential API
 
     def seed(self, seed: Optional[int] = None) -> None:
         self.np_random, seed = seeding.np_random(seed)
@@ -211,7 +213,9 @@ class SavannaEnv:
         self.seed(seed)
 
         self.agents = self.possible_agents[:]
-        self.rewards = {agent: 0.0 for agent in self.agents}       # storing in self is needed for Zoo sequential API
+        self.rewards = {
+            agent: 0.0 for agent in self.agents
+        }  # storing in self is needed for Zoo sequential API
         # self._cumulative_rewards = {agent: 0 for agent in self.agents}
         # self.dones = {agent: False for agent in self.agents}
         # self.infos = {agent: {} for agent in self.agents}
@@ -260,7 +264,7 @@ class SavannaEnv:
         if self.agents == []:
             raise ValueError("No agents found; num_iters reached?")
 
-        self.rewards = {}   # storing in self is needed for Zoo sequential API
+        self.rewards = {}  # storing in self is needed for Zoo sequential API
         for agent in self.agents:
             action = actions.get(agent)
             if isinstance(action, dict):

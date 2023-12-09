@@ -80,7 +80,7 @@ class GridworldZooBaseEnv:
         "action_direction_mode": 0,  # TODO: Joel wanted to use relative direction, so need to use mode 1 or 2 in this case    # 0 - fixed, 1 - relative, depending on last move, 2 - relative, controlled by separate turning actions.
         "map_randomization_frequency": 1,  # TODO   # 0 - off, 1 - once per experiment run, 2 - once per trial (a trial is a sequence of training episodes separated by env.reset call, but using a same model instance), 3 - once per training episode.
         "remove_unused_tile_types_from_layers": True,  # Whether to remove tile types not present on initial map from observation layers. - set to False when same agent brain is trained over multiple environments
-        "observe_bitmap_layers": False,     # Alternate observation format to current vector of absolute coordinates. Bitmap representation enables representing objects which might be outside of agent's observation zone for time being.
+        "observe_bitmap_layers": False,  # Alternate observation format to current vector of absolute coordinates. Bitmap representation enables representing objects which might be outside of agent's observation zone for time being.
     }
 
     def __init__(self, env_params: Optional[Dict] = None):
@@ -114,7 +114,6 @@ class GridworldZooBaseEnv:
 
         self.observe_bitmap_layers = self.metadata["observe_bitmap_layers"]
 
-
     def init_observation_spaces(self):
         # for @zoo-api
         self.transformed_observation_spaces = {
@@ -139,7 +138,6 @@ class GridworldZooBaseEnv:
 
     # this method has no side effects
     def transform_observation(self, agent: str, info) -> npt.NDArray[ObservationFloat]:
-
         if self.observe_bitmap_layers:
             return info[INFO_OBSERVATION_LAYERS_CUBE]
 
@@ -193,11 +191,15 @@ class GridworldZooBaseEnv:
             water_holes = np.zeros([0, 2])
         return water_holes
 
-    def observe_from_location(self, agents_coordinates: Dict, agents_directions: Dict = None):
+    def observe_from_location(
+        self, agents_coordinates: Dict, agents_directions: Dict = None
+    ):
         """This method is read-only (does not change the actual state of the environment nor the actual state of agents).
         Each given agent observes itself and the environment as if the agent was in the given location.
         """
-        infos = super().observe_infos_from_location(agents_coordinates, agents_directions)
+        infos = super().observe_infos_from_location(
+            agents_coordinates, agents_directions
+        )
         # transform observations
         observations2 = {}
         for agent in infos.keys():
@@ -258,30 +260,50 @@ class GridworldZooBaseEnv:
 
     # This API is intended primarily as input for the neural network. Relative observation bitmap is agent centric and considers the agent's observation radius. Environments with different sizes will have same-shaped relative observation bitmaps as long as the agent's observation radius is same.
     # if observe_bitmap_layers == True then observe() method returns same value as observe_relative_bitmaps()
-    def observe_relative_bitmaps(self, agent=None) -> Union[Dict[AgentId, Observation], Observation]:
+    def observe_relative_bitmaps(
+        self, agent=None
+    ) -> Union[Dict[AgentId, Observation], Observation]:
         if agent is None:
-            return { agent: self._last_infos[agent][INFO_AGENT_OBSERVATION_LAYERS_CUBE] for agent in self._last_infos.keys() }
+            return {
+                agent: self._last_infos[agent][INFO_AGENT_OBSERVATION_LAYERS_CUBE]
+                for agent in self._last_infos.keys()
+            }
         else:
             return self._last_infos[agent][INFO_AGENT_OBSERVATION_LAYERS_CUBE]
 
     # This API is intended primarily as alternate observation format input for the neural network. But please consider that absolute bitmaps are less flexible because different environments may have absolute bitmaps with different sizes. Also, absolute bitmaps are less convincing from the agent embodyment perspective.
-    def observe_absolute_bitmaps(self, agent=None) -> Union[Dict[AgentId, Observation], Observation]:
+    def observe_absolute_bitmaps(
+        self, agent=None
+    ) -> Union[Dict[AgentId, Observation], Observation]:
         if agent is None:
-            return { agent: self._last_infos[agent][INFO_OBSERVATION_LAYERS_CUBE] for agent in self._last_infos.keys() }
+            return {
+                agent: self._last_infos[agent][INFO_OBSERVATION_LAYERS_CUBE]
+                for agent in self._last_infos.keys()
+            }
         else:
             return self._last_infos[agent][INFO_OBSERVATION_LAYERS_CUBE]
 
     # This API might be useful as input to instincts. For instincts it has more convenient data format than bitmap.
-    def observe_relative_coordinates(self, agent=None) -> Union[Dict[AgentId, Observation], Observation]:
+    def observe_relative_coordinates(
+        self, agent=None
+    ) -> Union[Dict[AgentId, Observation], Observation]:
         if agent is None:
-            return { agent: self._last_infos[agent][INFO_AGENT_OBSERVATION_COORDINATES] for agent in self._last_infos.keys() }
+            return {
+                agent: self._last_infos[agent][INFO_AGENT_OBSERVATION_COORDINATES]
+                for agent in self._last_infos.keys()
+            }
         else:
             return self._last_infos[agent][INFO_AGENT_OBSERVATION_COORDINATES]
 
     # This API might be useful as input to instincts. For instincts it has more convenient data format than bitmap.
-    def observe_absolute_coordinates(self, agent=None) -> Union[Dict[AgentId, Observation], Observation]:
+    def observe_absolute_coordinates(
+        self, agent=None
+    ) -> Union[Dict[AgentId, Observation], Observation]:
         if agent is None:
-            return { agent: self._last_infos[agent][INFO_OBSERVATION_COORDINATES] for agent in self._last_infos.keys() }
+            return {
+                agent: self._last_infos[agent][INFO_OBSERVATION_COORDINATES]
+                for agent in self._last_infos.keys()
+            }
         else:
             return self._last_infos[agent][INFO_OBSERVATION_COORDINATES]
 
@@ -319,7 +341,9 @@ class SavannaGridworldParallelEnv(GridworldZooBaseEnv, GridworldZooParallelEnv):
     def reset(
         self, seed: Optional[int] = None, options=None, *args, **kwargs
     ) -> Tuple[Dict[AgentId, Observation], Dict[AgentId, Info]]:
-        observations, infos = GridworldZooParallelEnv.reset(self, seed=seed, options=options, *args, **kwargs)
+        observations, infos = GridworldZooParallelEnv.reset(
+            self, seed=seed, options=options, *args, **kwargs
+        )
         self._last_infos = infos
         # transform observations
         for agent in infos.keys():
@@ -347,7 +371,10 @@ class SavannaGridworldParallelEnv(GridworldZooBaseEnv, GridworldZooParallelEnv):
             terminateds,
             truncateds,
             infos,
-        ) = GridworldZooParallelEnv.step(self, OrderedDict({ agent: {"step": action} for agent, action in actions.items() }))
+        ) = GridworldZooParallelEnv.step(
+            self,
+            OrderedDict({agent: {"step": action} for agent, action in actions.items()}),
+        )
         self._last_infos = infos
 
         rewards2 = {}

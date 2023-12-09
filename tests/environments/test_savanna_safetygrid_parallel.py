@@ -12,6 +12,7 @@ from pettingzoo.test import (
 )
 from pettingzoo.test.parallel_test import parallel_api_test
 from pettingzoo.test.seed_test import parallel_seed_test
+
 # from pettingzoo.utils import parallel_to_aec
 
 
@@ -88,7 +89,7 @@ def test_gridworlds_done_step():
     assert len(env.possible_agents) == 1
     env.reset()
 
-    agent = env.possible_agents[0]    # TODO: multi-agent iteration
+    agent = env.possible_agents[0]  # TODO: multi-agent iteration
     for _ in range(env.metadata["num_iters"]):
         action = {agent: env.action_space(agent).sample()}
         _, _, terminateds, truncateds, _ = env.step(action)
@@ -120,7 +121,7 @@ def test_gridworlds_action_spaces():
 
     for agent in env.possible_agents:
         assert isinstance(env.action_space(agent), MultiDiscrete)
-        assert env.action_space(agent).n == 5   # includes no-op
+        assert env.action_space(agent).n == 5  # includes no-op
 
 
 def test_gridworlds_action_space_valid_step():

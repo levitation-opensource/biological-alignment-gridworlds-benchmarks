@@ -35,7 +35,6 @@ class SavannaZooParallelEnv(SavannaEnv, ParallelEnv):
 
 
 class SavannaZooSequentialEnv(SavannaEnv, AECEnv):
-    
     def __init__(self, env_params: Optional[Dict] = None):
         if env_params is None:
             env_params = {}
@@ -56,7 +55,7 @@ class SavannaZooSequentialEnv(SavannaEnv, AECEnv):
 
     @property
     def truncations(self):
-        return { agent: False for agent, done in self.dones.items() }
+        return {agent: False for agent, done in self.dones.items()}
 
     @property
     def agent_selection(self):
@@ -73,32 +72,35 @@ class SavannaZooSequentialEnv(SavannaEnv, AECEnv):
         SavannaEnv.reset(self, *args, **kwargs)
 
     def step(self, action: Action, *args, **kwargs):
-        SavannaEnv.step(self, { self.agent_selection: action }, *args, **kwargs)
+        SavannaEnv.step(self, {self.agent_selection: action}, *args, **kwargs)
         self._move_to_next_agent()
 
-    def _move_to_next_agent(self):  # https://pettingzoo.farama.org/content/basic_usage/#interacting-with-environments      
-
+    def _move_to_next_agent(
+        self,
+    ):  # https://pettingzoo.farama.org/content/basic_usage/#interacting-with-environments
         continue_search_for_non_done_agent = True
         search_loops_count = 0
 
         while continue_search_for_non_done_agent:
-
-            self._next_agent_index = (self._next_agent_index + 1) % len(self.possible_agents) # loop over agents repeatedly     # https://pettingzoo.farama.org/content/basic_usage/#interacting-with-environments  
-            agent = self.possible_agents[self._next_agent_index]                
+            self._next_agent_index = (self._next_agent_index + 1) % len(
+                self.possible_agents
+            )  # loop over agents repeatedly     # https://pettingzoo.farama.org/content/basic_usage/#interacting-with-environments
+            agent = self.possible_agents[self._next_agent_index]
 
             done = self.terminations[agent] or self.truncations[agent]
             continue_search_for_non_done_agent = done
 
             search_loops_count += 1
-            if continue_search_for_non_done_agent and search_loops_count == len(self.possible_agents):   # all agents are done     # https://pettingzoo.farama.org/content/basic_usage/#interacting-with-environments  
+            if continue_search_for_non_done_agent and search_loops_count == len(
+                self.possible_agents
+            ):  # all agents are done     # https://pettingzoo.farama.org/content/basic_usage/#interacting-with-environments
                 self._next_agent_index = -1
                 self._next_agent = None
                 self._all_agents_done = True
                 return
 
-        #/ while search_for_non_done_agent:
+        # / while search_for_non_done_agent:
 
         self._next_agent = agent
 
-    #/ def _move_to_next_agent(self): 
-
+    # / def _move_to_next_agent(self):

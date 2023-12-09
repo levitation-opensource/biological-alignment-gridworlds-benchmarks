@@ -12,6 +12,7 @@ from pettingzoo.test import (
 )
 from pettingzoo.test import api_test
 from pettingzoo.test.seed_test import seed_test
+
 # from pettingzoo.utils import parallel_to_aec
 
 
@@ -130,13 +131,17 @@ def test_zoo_step_result():
 
     env.step(action)
     # NB! env.last() provides observation from NEXT agent in case of multi-agent environment
-    observation, reward, terminated, truncated, info = env.last()    # TODO: multi-agent iteration
+    (
+        observation,
+        reward,
+        terminated,
+        truncated,
+        info,
+    ) = env.last()  # TODO: multi-agent iteration
     done = terminated or truncated
 
     assert not done
-    assert isinstance(
-        observation, np.ndarray
-    ), "observation of agent is not an array"
+    assert isinstance(observation, np.ndarray), "observation of agent is not an array"
     assert isinstance(reward, np.float64), "reward of agent is not a float64"
 
 
