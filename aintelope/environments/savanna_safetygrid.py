@@ -470,7 +470,7 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
 
         self._last_infos = infos
         self._last_rewards2 = {
-            agent: 0.0 for agent in self.possible_agents
+            agent: np.float64(0) for agent in self.possible_agents
         }  # Rewards should be initialised to 0.0 before any step is taken so that .rewards property returns dictionary with existing agents. NB! not calculating actual rewards yet, rewards should be only updated after step, not on each observation before step.
 
         if self._override_infos:
