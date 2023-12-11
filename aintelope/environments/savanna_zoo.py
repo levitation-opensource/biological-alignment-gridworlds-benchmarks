@@ -72,6 +72,11 @@ class SavannaZooSequentialEnv(SavannaEnv, AECEnv):
         SavannaEnv.reset(self, *args, **kwargs)
 
     def step(self, action: Action, *args, **kwargs):
+        self.step_single_agent(
+            action, *args, **kwargs
+        )  # NB! no return here, else Zoo tests will fail
+
+    def step_single_agent(self, action: Action, *args, **kwargs):
         # NB! both AIntelope Zoo and Gridworlds Zoo wrapper in AIntelope provide slightly modified Zoo API. Normal Zoo sequential API step() method does not return values.
         result = SavannaEnv.step(self, {self.agent_selection: action}, *args, **kwargs)
         (

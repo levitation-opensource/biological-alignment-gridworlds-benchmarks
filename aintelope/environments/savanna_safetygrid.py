@@ -508,10 +508,17 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
 
         return observation2, reward2, terminated, truncated, info
 
-    def step(self, action: Action) -> Step:
-        return self.step_single_agent(action)
+    def step(self, action: Action):
+        logger.debug("debug action", action)
 
-    def step_single_agent(self, action: Action) -> Step:
+        agent = self.agent_selection
+        if action is None:
+            action = (
+                Actions.NOOP
+            )  # all agents need to take a step, the stepping order cannot be modified
+        GridworldZooAecEnv.step(self, {"step": action})
+
+    def step_single_agent(self, action: Action):
         """step(action) takes in an action for each agent and should return the
         - observation
         - reward

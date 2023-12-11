@@ -70,12 +70,15 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
         #     env = parallel_to_aec(env)
         # assumption here: all agents in zoo have same observation space shape
         env.reset()
-        obs_size = env.observation_space("agent_0").shape[
-            0
-        ]  # TODO: multi-agent compatibility
 
+        # TODO: multi-agent compatibility
+        # TODO: support for 3D-observation cube
+        obs_size = env.observation_space("agent_0").shape[0]
         logger.info("obs size", obs_size)
-        n_actions = env.action_space("agent_0").n  # TODO: multi-agent compatibility
+
+        # TODO: multi-agent compatibility
+        # TODO: multi-modal action compatibility
+        n_actions = env.action_space("agent_0").n
         logger.info("n actions", n_actions)
     else:
         logger.info(
@@ -154,14 +157,13 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
         if env_type == "zoo":
             actions = {}
             for agent in agents:
-                observation = env.observe(agent.id)
+                observation = env.observe(agent.id)  # TODO: parallel env support
                 # agent doesn't get to play_step, only env can, for multi-agent env compatibility
                 # reward, score, done = agent.play_step(nets[i], epsilon=1.0)
                 actions["agent_0"] = agent.get_action(  # TODO: agent_name
                     # models[0],  # TODO: net per agent
                     # epsilon=epsilon,
                     # device=tparams["device"],
-                    # observations[agent],
                     observation,
                     step=0,
                 )
@@ -169,11 +171,12 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
             logger.debug("debug step")
             logger.debug(env.__dict__)
 
-            observation, reward, terminated, truncated, info = env.step(actions)
+            # NB! both AIntelope Zoo and Gridworlds Zoo wrapper in AIntelope provide slightly modified Zoo API. Normal Zoo sequential API step() method does not return values and cannot return values else Zoo API tests will fail.
+            observation, reward, terminated, truncated, info = env.step_single_agent(
+                actions
+            )  # TODO: parallel env support
             logger.debug((observation, reward, terminated, truncated, info))
             done = terminated or truncated
-
-            # observations[agent] = observation
         else:
             # the assumption by non-zoo env will be 1 agent generally I think
             for agent, model in zip(agents, models):

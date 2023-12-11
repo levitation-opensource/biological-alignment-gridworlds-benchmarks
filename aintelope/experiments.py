@@ -144,8 +144,8 @@ def run_experiment(cfg: DictConfig) -> None:
                     action = agent.get_action(observation, step)
 
                     # Env step
-                    # NB! both AIntelope Zoo and Gridworlds Zoo wrapper in AIntelope provide slightly modified Zoo API. Normal Zoo sequential API step() method does not return values.
-                    result = env.step(action)
+                    # NB! both AIntelope Zoo and Gridworlds Zoo wrapper in AIntelope provide slightly modified Zoo API. Normal Zoo sequential API step() method does not return values and cannot return values else Zoo API tests will fail.
+                    result = env.step_single_agent(action)
                     (
                         observation,
                         score,
