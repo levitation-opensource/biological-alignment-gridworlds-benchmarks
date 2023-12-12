@@ -31,7 +31,7 @@ def test_instinctagent_in_savanna_zoo_sequential(
             "amount_water_holes": 1,
         },
     }
-    OmegaConf.merge(full_params.hparams, params_savanna_zoo)
+    full_params.hparams = OmegaConf.merge(full_params.hparams, params_savanna_zoo)
     run_episode(full_params=full_params)
 
 
@@ -54,7 +54,7 @@ def test_instinctagent_in_savanna_gridworlds_sequential(
             "amount_water_holes": 1,
         },
     }
-    OmegaConf.merge(full_params.hparams, params_savanna_zoo)
+    full_params.hparams = OmegaConf.merge(full_params.hparams, params_savanna_zoo)
     run_episode(full_params=full_params)
 
 
@@ -79,7 +79,7 @@ def test_instinctagent_in_savanna_gridworlds_sequential(
 #            "amount_water_holes": 1,
 #        },
 #    }
-#    OmegaConf.merge(full_params.hparams, params_savanna_zoo)
+#    full_params.hparams = OmegaConf.merge(full_params.hparams, params_savanna_zoo)
 #    run_episode(full_params=full_params)
 
 
@@ -102,7 +102,7 @@ def test_instinctagent_in_savanna_gridworlds_sequential(
 #            "amount_water_holes": 1,
 #        },
 #    }
-#    OmegaConf.merge(full_params.hparams, params_savanna_zoo)
+#    full_params.hparams = OmegaConf.merge(full_params.hparams, params_savanna_zoo)
 #    run_episode(full_params=full_params)
 
 

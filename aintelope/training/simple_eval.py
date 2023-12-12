@@ -116,11 +116,9 @@ def run_episode(full_params: Dict) -> None:
         raise NotImplementedError(f"Unknown environment type {type(env)}")
 
     # Common trainer for each agent's models
-    # cfg = OmegaConf.merge(full_params.hparams, tparams)
     trainer = Trainer(
         full_params, n_observations, action_space
     )  # TODO: have a section in params for trainer? its trainer and hparams now tho
-    # trainer = None  # TODO
 
     buffer = ReplayBuffer(hparams["replay_size"])
 

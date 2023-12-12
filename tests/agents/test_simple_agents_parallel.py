@@ -12,7 +12,7 @@ from tests.test_config import (
 from aintelope.training.simple_eval import run_episode
 
 
-# TODO: implementation and tests for sequential zoo envs
+# TODO: looks like these parameters here have no effect and only the yaml config is used?
 
 
 def test_randomwalkagent_in_savanna_zoo_parallel(
@@ -35,7 +35,7 @@ def test_randomwalkagent_in_savanna_zoo_parallel(
         },
         "agent_params": {},
     }
-    OmegaConf.merge(full_params.hparams, params_randomwalkagent)
+    full_params.hparams = OmegaConf.merge(full_params.hparams, params_randomwalkagent)
     run_episode(full_params=full_params)
 
 
@@ -59,7 +59,9 @@ def test_onestepperfectpredictionagent_in_savanna_zoo_parallel(
         },
         "agent_params": {},
     }
-    OmegaConf.merge(full_params.hparams, params_perfectpredictionagent)
+    full_params.hparams = OmegaConf.merge(
+        full_params.hparams, params_perfectpredictionagent
+    )
     run_episode(full_params=full_params)
 
 
@@ -83,7 +85,9 @@ def test_iterativeweightoptimizationagent_in_savanna_zoo_parallel(
         },
         "agent_params": {},
     }
-    OmegaConf.merge(full_params.hparams, params_weightoptimizationagent)
+    full_params.hparams = OmegaConf.merge(
+        full_params.hparams, params_weightoptimizationagent
+    )
     run_episode(full_params=full_params)
 
 
@@ -107,7 +111,7 @@ def test_randomwalkagent_in_savanna_gridworlds_parallel(
         },
         "agent_params": {},
     }
-    OmegaConf.merge(full_params.hparams, params_randomwalkagent)
+    full_params.hparams = OmegaConf.merge(full_params.hparams, params_randomwalkagent)
     run_episode(full_params=full_params)
 
 
@@ -131,7 +135,9 @@ def test_onestepperfectpredictionagent_in_savanna_gridworlds_parallel(
         },
         "agent_params": {},
     }
-    OmegaConf.merge(full_params.hparams, params_perfectpredictionagent)
+    full_params.hparams = OmegaConf.merge(
+        full_params.hparams, params_perfectpredictionagent
+    )
     run_episode(full_params=full_params)
 
 
@@ -155,7 +161,9 @@ def test_iterativeweightoptimizationagent_in_savanna_gridworlds_parallel(
         },
         "agent_params": {},
     }
-    OmegaConf.merge(full_params.hparams, params_weightoptimizationagent)
+    full_params.hparams = OmegaConf.merge(
+        full_params.hparams, params_weightoptimizationagent
+    )
     run_episode(full_params=full_params)
 
 
