@@ -1,20 +1,23 @@
-from typing import Tuple
+import sys
+import os
+import pytest
+from typing import Tuple, Dict
 
 from omegaconf import OmegaConf, DictConfig
 
-from tests.test_config import root_dir, tparams_hparams
-from aintelope.environments.env_utils.cleanup import cleanup_gym_envs
+from tests.test_config import (
+    root_dir,
+    tparams_hparams,
+)
 from aintelope.training.simple_eval import run_episode
 
 
-def test_qagent_in_savanna_zoo_sequential(
-    tparams_hparams: Tuple[DictConfig, DictConfig]
-) -> None:
-    tparams, hparams = tparams_hparams
-    params_zoo_sequential = {
+def test_qagent_in_savanna_zoo_sequential(tparams_hparams: Dict) -> None:  # TODO
+    full_params = tparams_hparams
+    params_savanna_zoo = {
         "agent_id": "q_agent",
         "env": "savanna-zoo-sequential-v2",
-        "env_entry_point": None,
+        "env_entry_point": "aintelope.environments.savanna_zoo:SavannaZooSequentialEnv",
         "env_type": "zoo",
         "sequential_env": True,
         "env_params": {
@@ -28,18 +31,16 @@ def test_qagent_in_savanna_zoo_sequential(
         },
         "agent_params": {},
     }
-    OmegaConf.merge(hparams, params_zoo_sequential)
-    run_episode(tparams=tparams, hparams=hparams)
+    full_params.hparams = OmegaConf.merge(full_params.hparams, params_savanna_zoo)
+    run_episode(full_params=full_params)
 
 
-def test_qagent_in_savanna_zoo_parallel(
-    tparams_hparams: Tuple[DictConfig, DictConfig]
-) -> None:
-    tparams, hparams = tparams_hparams
-    params_zoo_parallel = {
+def test_qagent_in_savanna_gridworlds_sequential(tparams_hparams: Dict) -> None:
+    full_params = tparams_hparams
+    params_savanna_zoo = {
         "agent_id": "q_agent",
-        "env": "savanna-zoo-parallel-v2",
-        "env_entry_point": None,
+        "env": "savanna-safetygrid-sequential-v1",
+        "env_entry_point": "aintelope.environments.savanna_safetygrid:SavannaGridworldSequentialEnv",
         "env_type": "zoo",
         "env_params": {
             "num_iters": 40,  # duration of the game
@@ -52,27 +53,60 @@ def test_qagent_in_savanna_zoo_parallel(
         },
         "agent_params": {},
     }
-    OmegaConf.merge(hparams, params_zoo_parallel)
-    run_episode(tparams=tparams, hparams=hparams)
+    full_params.hparams = OmegaConf.merge(full_params.hparams, params_savanna_zoo)
+    run_episode(full_params=full_params)
 
 
-def test_qagent_in_savanna_gym(tparams_hparams: Tuple[DictConfig, DictConfig]) -> None:
-    tparams, hparams = tparams_hparams
-    params_savanna_gym = {
-        "agent_id": "q_agent",
-        "env": "savanna-gym-v2",
-        "env_type": "gym",
-        "env_params": {
-            "num_iters": 40,  # duration of the game
-            "map_min": 0,
-            "map_max": 20,
-            "render_map_max": 20,
-            "amount_agents": 1,  # for now only one agent
-            "amount_grass_patches": 2,
-            "amount_water_holes": 0,
-        },
-        "agent_params": {},
-    }
-    OmegaConf.merge(hparams, params_savanna_gym)
-    run_episode(tparams=tparams, hparams=hparams)
-    cleanup_gym_envs()
+# TODO: parallel API support
+
+# def test_qagent_in_savanna_zoo_parallel(  # TODO
+#    tparams_hparams: Dict
+# ) -> None:
+#    full_params = tparams_hparams
+#    params_savanna_zoo = {
+#        "agent_id": "q_agent",
+#        "env": "savanna-zoo-parallel-v2",
+#        "env_entry_point": "aintelope.environments.savanna_zoo:SavannaZooParallelEnv",
+#        "env_type": "zoo",
+#        "sequential_env": True,
+#        "env_params": {
+#            "num_iters": 40,  # duration of the game
+#            "map_min": 0,
+#            "map_max": 20,
+#            "render_map_max": 20,
+#            "amount_agents": 1,  # for now only one agent
+#            "amount_grass_patches": 2,
+#            "amount_water_holes": 0,
+#        },
+#        "agent_params": {},
+#    }
+#    full_params.hparams = OmegaConf.merge(full_params.hparams, params_savanna_zoo)
+#    run_episode(full_params=full_params)
+
+
+# def test_qagent_in_savanna_gridworlds_parallel(
+#    tparams_hparams: Dict
+# ) -> None:
+#    full_params = tparams_hparams
+#    params_savanna_zoo = {
+#        "agent_id": "q_agent",
+#        "env": "savanna-safetygrid-parallel-v1",
+#        "env_entry_point": "aintelope.environments.savanna_safetygrid:SavannaGridworldParallelEnv",
+#        "env_type": "zoo",
+#        "env_params": {
+#            "num_iters": 40,  # duration of the game
+#            "map_min": 0,
+#            "map_max": 20,
+#            "render_map_max": 20,
+#            "amount_agents": 1,  # for now only one agent
+#            "amount_grass_patches": 2,
+#            "amount_water_holes": 0,
+#        },
+#        "agent_params": {},
+#    }
+#    full_params.hparams = OmegaConf.merge(full_params.hparams, params_savanna_zoo)
+#    run_episode(full_params=full_params)
+
+
+if __name__ == "__main__" and os.name == "nt":  # detect debugging
+    pytest.main([__file__])  # run tests only in this file

@@ -5,11 +5,10 @@ import numpy.typing as npt
 
 from gymnasium.spaces import Discrete
 
-from aintelope.agents import Environment, register_agent_class
+from aintelope.agents import Environment, register_agent_class, PettingZooEnv
 from aintelope.agents.q_agent import QAgent, HistoryStep
 from aintelope.training.dqn_training import Trainer
 from aintelope.agents.instincts.savanna_instincts import available_instincts_dict
-from aintelope.environments.savanna_gym import SavannaGymEnv
 
 from aintelope.environments.typing import (
     ObservationFloat,
@@ -62,7 +61,7 @@ class InstinctAgent(QAgent):
 
     def update(
         self,
-        env: SavannaGymEnv = None,  # TODO hack, figure out if state_to_namedtuple can be static somewhere
+        env: PettingZooEnv = None,  # TODO hack, figure out if state_to_namedtuple can be static somewhere
         observation: npt.NDArray[ObservationFloat] = None,
         score: float = 0.0,
         done: bool = False,

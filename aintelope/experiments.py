@@ -6,11 +6,20 @@ from omegaconf import DictConfig
 import os
 from pathlib import Path
 
-from aintelope.environments.savanna_gym import SavannaGymEnv
+from pettingzoo import AECEnv, ParallelEnv
+from aintelope.environments.savanna_zoo import (
+    SavannaZooParallelEnv,
+    SavannaZooSequentialEnv,
+)
+from aintelope.environments.savanna_safetygrid import (
+    SavannaGridworldParallelEnv,
+    SavannaGridworldSequentialEnv,
+)
+from aintelope.environments.savanna_safetygrid import SavannaGridworldSequentialEnv
+
 from aintelope.models.dqn import DQN
 from aintelope.agents import (
     Agent,
-    GymEnv,
     PettingZooEnv,
     Environment,
     register_agent_class,
@@ -24,12 +33,38 @@ def run_experiment(cfg: DictConfig) -> None:
     logger = logging.getLogger("aintelope.experiment")
 
     # Environment
-    env = SavannaGymEnv(
-        env_params=cfg.hparams.env_params
-    )  # TODO: get env from parameters
+    hparams = cfg.hparams
+    if hparams.env == "savanna-zoo-parallel-v2":
+        env = SavannaZooParallelEnv(env_params=hparams.env_params)
+    elif hparams.env == "savanna-safetygrid-parallel-v1":
+        env = SavannaGridworldParallelEnv(env_params=hparams.env_params)
+    elif hparams.env == "savanna-zoo-sequential-v2":
+        env = SavannaZooSequentialEnv(env_params=hparams.env_params)
+    elif hparams.env == "savanna-safetygrid-sequential-v1":
+        env = SavannaGridworldSequentialEnv(env_params=hparams.env_params)
+    else:
+        raise NotImplementedError()
+
     action_space = env.action_space
-    observation, info = env.reset()  # TODO: each agent has their own state, refactor
-    n_observations = len(observation)
+
+    if isinstance(env, ParallelEnv):
+        (
+            observations,
+            infos,
+        ) = env.reset()  # TODO: each agent has their own state, refactor
+        # TODO: each agent has their own observation size    # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
+        n_observations = len(  # TODO: support for 3D-observation cube
+            observations["agent_0"]
+        )
+    elif isinstance(env, AECEnv):
+        env.reset()
+        # TODO: each agent has their own observation size    # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
+        observation = env.observe(
+            "agent_0"
+        )  # TODO: each agent has their own state, refactor
+        n_observations = len(observation)  # TODO: support for 3D-observation cube
+    else:
+        raise NotImplementedError(f"Unknown environment type {type(env)}")
 
     # Common trainer for each agent's models
     trainer = Trainer(
@@ -49,8 +84,11 @@ def run_experiment(cfg: DictConfig) -> None:
                 **cfg.hparams.agent_params,
             )
         )
-        agents[-1].reset(env.observe(agent_id))
+        observation = env.observe(agent_id)  # TODO parallel env observation handling
+        agents[-1].reset(observation)
         trainer.add_agent(agent_id)
+
+    agents_dict = {agent.id: agent for agent in agents}
 
     # Warmup not supported atm, would be here
     # for _ in range(hparams.warm_start_steps):
@@ -59,42 +97,83 @@ def run_experiment(cfg: DictConfig) -> None:
     # Main loop
     for i_episode in range(cfg.hparams.num_episodes):
         # Reset
-        _, _ = env.reset()
-        for agent in agents:
-            agent.reset(env.observe(agent.id))
-            dones[agent.id] = False
+        if isinstance(env, ParallelEnv):
+            (
+                observations,
+                infos,
+            ) = env.reset()
+            for agent in agents:
+                agent.reset(observations[agent.id])
+                dones[agent.id] = False
+
+        elif isinstance(env, AECEnv):
+            env.reset()
+            for agent in agents:
+                agent.reset(env.observe(agent.id))
+                dones[agent.id] = False
 
         for step in range(cfg.hparams.env_params.num_iters):
-            for agent in agents:
-                observation = env.observe(agent.id)
-                action = agent.get_action(observation, step)
+            if isinstance(env, ParallelEnv):
+                # loop: get observations and collect actions
+                actions = {}
+                for agent in agents:  # TODO: exclude terminated agents
+                    observation = env.observe(agent.id)
+                    actions[agent.id] = agent.get_action(observation, step)
 
-                # Env step
-                if isinstance(env, GymEnv):
-                    observation, score, terminated, truncated, _ = env.step(action)
+                # call: send actions and get observations
+                observations, scores, terminateds, truncateds, _ = env.step(actions)
+                dones = {
+                    key: terminated or truncateds[key]
+                    for (key, terminated) in terminateds.items()
+                }
+
+                # loop: update
+                for agent in agents:
+                    observation = observations[agent.id]
+                    score = scores[agent.id]
+                    done = dones[agent.id]
+                    terminated = terminateds[agent.id]
+                    if terminated:
+                        observation = None
+                    agent.update(
+                        env, observation, score, done
+                    )  # note that score is used ONLY by baseline
+
+            elif isinstance(env, AECEnv):
+                # loop: observe, collect action, send action, get observation, update
+                for agent_id in env.agent_iter(
+                    max_iter=env.num_agents
+                ):  # num_agents returns number of alive (non-done) agents
+                    agent = agents_dict[agent_id]
+
+                    observation = env.observe(agent.id)
+                    action = agent.get_action(observation, step)
+
+                    # Env step
+                    # NB! both AIntelope Zoo and Gridworlds Zoo wrapper in AIntelope provide slightly modified Zoo API. Normal Zoo sequential API step() method does not return values and is not allowed to return values else Zoo API tests will fail.
+                    result = env.step_single_agent(action)
+                    (
+                        observation,
+                        score,
+                        terminated,
+                        truncated,
+                        info,
+                    ) = result
                     done = terminated or truncated
-                elif isinstance(env, PettingZooEnv):
-                    observation, score, terminateds, truncateds, _ = env.step(action)
-                    done = {
-                        key: terminated or truncateds[key]
-                        for (key, terminated) in terminateds.items()
-                    }
-                else:
-                    logger.warning(f"{env} is not of type GymEnv or PettingZooEnv")
-                    observation, score, done, _ = env.step(action)
-                # observation, reward, terminated, truncated, _ = env.step(action)
 
-                # Agent is updated based on what the env shows. All commented above included ^
-                done = terminated or truncated
-                dones[agent.id] = done
-                if terminated:
-                    observation = None
-                agent.update(
-                    env, observation, score, done
-                )  # note that score is used ONLY by baseline
+                    # Agent is updated based on what the env shows. All commented above included ^
+                    dones[agent.id] = done
+                    if terminated:
+                        observation = None
+                    agent.update(
+                        env, observation, score, done
+                    )  # note that score is used ONLY by baseline
 
-                # Perform one step of the optimization (on the policy network)
-                trainer.optimize_models(step)
+            else:
+                raise NotImplementedError(f"Unknown environment type {type(env)}")
+
+            # Perform one step of the optimization (on the policy network)
+            trainer.optimize_models(step)
 
             # Break when all agents are done
             if all(dones.values()):

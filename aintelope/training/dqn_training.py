@@ -80,19 +80,21 @@ class Trainer:
         # tb-logging and device control, check lightning_Trainer for 'AVAIL'
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.optimizer = optim.AdamW(
-            DQN(self.n_observations, self.action_space.n).parameters(),
+            DQN(
+                self.n_observations, self.action_space("agent_0").n
+            ).parameters(),  # TODO: multi-agent handling
             lr=self.hparams.lr,
             amsgrad=True,
         )  # refactor, making a dummy network now. problem is add_agent inits first real network---v
 
     def add_agent(self, agent_id):
         self.replay_memories[agent_id] = ReplayMemory(self.hparams.replay_size)
-        self.policy_nets[agent_id] = DQN(self.n_observations, self.action_space.n).to(
-            self.device
-        )
-        self.target_nets[agent_id] = DQN(self.n_observations, self.action_space.n).to(
-            self.device
-        )
+        self.policy_nets[agent_id] = DQN(
+            self.n_observations, self.action_space(agent_id).n
+        ).to(self.device)
+        self.target_nets[agent_id] = DQN(
+            self.n_observations, self.action_space(agent_id).n
+        ).to(self.device)
         self.target_nets[agent_id].load_state_dict(
             self.policy_nets[agent_id].state_dict()
         )
@@ -113,7 +115,7 @@ class Trainer:
             epsilon = 0.0
 
         if np.random.random() < epsilon:
-            action = self.action_space.sample()
+            action = self.action_space(agent_id).sample()
         else:
             logger.debug(
                 "debug state", type(observation)
@@ -184,7 +186,7 @@ class Trainer:
             # for each batch state according to policy_net
             policy_net = self.policy_nets[agent_id]
             target_net = self.target_nets[agent_id]
-            state_action_values = policy_net(state_batch).gather(1, action_batch)
+            state_action_values = policy_net(state_batch).gather(1, action_batch.long())
 
             # Compute V(s_{t+1}) for all next states.
             # Expected values of actions for non_final_next_states are computed based

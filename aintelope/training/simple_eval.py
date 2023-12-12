@@ -1,10 +1,15 @@
+from collections import Counter
+
 import logging
 
 import gymnasium as gym
 
-from omegaconf import DictConfig
+from omegaconf import OmegaConf, DictConfig
+from typing import Dict
 
-from aintelope.agents.q_agent import Agent as Qagent
+from pettingzoo import AECEnv, ParallelEnv
+
+from aintelope.agents.q_agent import QAgent
 from aintelope.agents.instinct_agent import InstinctAgent
 from aintelope.agents.simple_agents import (
     RandomWalkAgent,
@@ -17,13 +22,20 @@ from aintelope.environments.savanna_zoo import (
     SavannaZooParallelEnv,
     SavannaZooSequentialEnv,
 )
+from aintelope.environments.savanna_safetygrid import (
+    SavannaGridworldParallelEnv,
+    SavannaGridworldSequentialEnv,
+)
+
+from aintelope.training.dqn_training import Trainer
+
 
 logger = logging.getLogger("aintelope.training.simple_eval")
 
 # is there a better way to do this?
 # to register a lookup table from hparam name to function?
 AGENT_LOOKUP = {
-    "q_agent": Qagent,
+    "q_agent": QAgent,
     "instinct_agent": InstinctAgent,
     "random_walk_agent": RandomWalkAgent,
     "one_step_perfect_prediction_agent": OneStepPerfectPredictionAgent,
@@ -33,12 +45,17 @@ AGENT_LOOKUP = {
 ENV_LOOKUP = {
     "savanna-zoo-parallel-v2": SavannaZooParallelEnv,
     "savanna-zoo-sequential-v2": SavannaZooSequentialEnv,
+    "savanna-safetygrid-parallel-v1": SavannaGridworldParallelEnv,
+    "savanna-safetygrid-sequential-v1": SavannaGridworldSequentialEnv,
 }
 
 MODEL_LOOKUP = {"dqn": DQN}
 
 
-def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
+def run_episode(full_params: Dict) -> None:
+    tparams = full_params.trainer_params
+    hparams = full_params.hparams
+
     env_params = hparams["env_params"]
     agent_params = hparams["agent_params"]
     render_mode = env_params["render_mode"]
@@ -59,26 +76,16 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
         #     env = parallel_to_aec(env)
         # assumption here: all agents in zoo have same observation space shape
         env.reset()
-        obs_size = env.observation_space("agent_0").shape[0]
 
+        # TODO: multi-agent compatibility
+        # TODO: support for 3D-observation cube
+        obs_size = env.observation_space("agent_0").shape[0]
         logger.info("obs size", obs_size)
+
+        # TODO: multi-agent compatibility
+        # TODO: multi-modal action compatibility
         n_actions = env.action_space("agent_0").n
         logger.info("n actions", n_actions)
-
-    elif env_type == "gym":
-        # GYM_INTERACTION
-        if hparams["env_entry_point"] is not None:
-            gym.envs.register(
-                id=hparams["env"],
-                entry_point=hparams[
-                    "env_entry_point"
-                ],  # e.g. 'aintelope.environments.savanna_gym:SavannaGymEnv'
-                kwargs={"env_params": env_params},
-            )
-        env = gym.make(hparams["env"])
-        obs_size = env.observation_space.shape[0]
-        n_actions = env.action_space.n
-        # env = gym_vec_env_v0(env, num_envs=1)
     else:
         logger.info(
             f"env_type {hparams['env_type']} not implemented."
@@ -86,6 +93,32 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
         )
 
     env.reset(options={})
+
+    action_space = env.action_space
+
+    if isinstance(env, ParallelEnv):
+        (
+            observations,
+            infos,
+        ) = env.reset()  # TODO: each agent has their own state, refactor
+        # TODO: each agent has their own observation size    # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
+        n_observations = len(  # TODO: support for 3D-observation cube
+            observations["agent_0"]
+        )
+    elif isinstance(env, AECEnv):
+        env.reset()
+        # TODO: each agent has their own observation size    # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
+        observation = env.observe(
+            "agent_0"
+        )  # TODO: each agent has their own state, refactor
+        n_observations = len(observation)  # TODO: support for 3D-observation cube
+    else:
+        raise NotImplementedError(f"Unknown environment type {type(env)}")
+
+    # Common trainer for each agent's models
+    trainer = Trainer(
+        full_params, n_observations, action_space
+    )  # TODO: have a section in params for trainer? its trainer and hparams now tho
 
     buffer = ReplayBuffer(hparams["replay_size"])
 
@@ -102,83 +135,147 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
         if len(models) < len(agent_spec):
             models *= len(agent_spec)
         agents = [
-            AGENT_LOOKUP[agent](env, buffer, hparams["warm_start_size"], **agent_params)
+            AGENT_LOOKUP[agent](
+                # TODO: cannot use agent_spec value "q_agent" here, env expects the agent names to be like "agent_0", "agent_1", etc. Use env.possible_agents to get list of agent names.
+                agent_id="agent_0",  # TODO
+                trainer=trainer,
+                action_space=env.action_space("agent_0"),  # TODO
+                # target_instincts: List[str] = [],
+                # env, buffer, hparams["warm_start_size"], **agent_params
+            )
             for agent in agent_spec
         ]
     else:
         agents = [
             AGENT_LOOKUP[agent_spec](
-                env, buffer, hparams["warm_start_size"], **agent_params
+                # TODO: cannot use agent_spec value "q_agent" here, env expects the agent names to be like "agent_0", "agent_1", etc. Use env.possible_agents to get list of agent names.
+                agent_id="agent_0",  # TODO
+                trainer=trainer,
+                action_space=env.action_space("agent_0"),  # TODO
+                # target_instincts: List[str] = [],
+                # env, buffer, hparams["warm_start_size"], **agent_params
             )
         ]
 
-    episode_rewards = [0 for x in agents]
-    dones = [False for x in agents]
+    # Agents
+    for agent in agents:
+        observation = env.observe(agent.id)  # TODO parallel env observation handling
+        agent.reset(observation)
+        trainer.add_agent(agent.id)
+
+    agents_dict = {agent.id: agent for agent in agents}
+
+    episode_rewards = Counter(
+        {agent: 0.0 for agent in agents}
+    )  # cannot use list since some of the agents may be terminated in the middle of the episode
+    dones = {
+        agent: False for agent in agents
+    }  # cannot use list since some of the agents may be terminated in the middle of the episode
     warm_start_steps = hparams["warm_start_steps"]
 
     for step in range(warm_start_steps):
-        epsilon = 1.0  # forces random action for warmup steps
+        # epsilon = 1.0  # forces random action for warmup steps
         if env_type == "zoo":
-            actions = {}
-            for agent in agents:
+            dones = {}
+            for agent_id in env.agent_iter(
+                max_iter=env.num_agents
+            ):  # num_agents returns number of alive (non-done) agents
+                agent = agents_dict[agent_id]
+                observation = env.observe(agent.id)  # TODO: parallel env support
                 # agent doesn't get to play_step, only env can, for multi-agent env compatibility
                 # reward, score, done = agent.play_step(nets[i], epsilon=1.0)
-                actions[agent.name] = agent.get_action(
-                    epsilon=epsilon, device=tparams["device"]
+                # action = action_space("agent_0").sample()  # TODO: agent.get_action()
+                action = agent.get_action(
+                    # models[0],
+                    # epsilon=epsilon,
+                    # device=tparams["device"],
+                    observation,
+                    step=0,
                 )
-            logger.debug("debug actions", actions)
-            logger.debug("debug step")
-            logger.debug(env.__dict__)
+                logger.debug("debug action", action)
+                logger.debug("debug step")
+                logger.debug(env.__dict__)
 
-            logger.debug(
-                env.step(actions)
-            )  # TODO: is this a bug? env.step() is called two times - on this line and below
-            observations, rewards, terminateds, truncateds, infos = env.step(action)
-            dones = {
-                key: terminated or truncateds[key]
-                for (key, terminated) in terminateds.items()
-            }
+                # NB! both AIntelope Zoo and Gridworlds Zoo wrapper in AIntelope provide slightly modified Zoo API. Normal Zoo sequential API step() method does not return values and is not allowed to return values else Zoo API tests will fail.
+                (
+                    observation,
+                    reward,
+                    terminated,
+                    truncated,
+                    info,
+                ) = env.step_single_agent(
+                    action
+                )  # TODO: parallel env support
+                logger.debug((observation, reward, terminated, truncated, info))
+                done = terminated or truncated
+                dones[agent.id] = done
+
         else:
             # the assumption by non-zoo env will be 1 agent generally I think
             for agent, model in zip(agents, models):
                 reward, score, done = agent.play_step(model, epsilon, tparams["device"])
-                dones = [done]
-        if any(dones):
+                dones[agent.id] = done
+
+        if any(dones.values()):
             for agent in agents:
-                if agent.done and verbose:
+                if dones[agent.id] and verbose:
                     logger.warning(
-                        f"Uhoh! Your agent {agent.name} terminated during warmup"
+                        f"Uhoh! Your agent {agent.id} terminated during warmup"
                         "on step {step}/{warm_start_steps}"
                     )
-        if all(dones):
+        if all(dones.values()):
             break
 
-    while not all(dones):
-        epsilon = max(
-            hparams["eps_end"],
-            hparams["eps_start"] - env.num_moves * 1 / hparams["eps_last_frame"],
-        )
+    step = -1
+    while not all(dones.values()):
+        step += 1  # for debugging
+        # epsilon = max(
+        #    hparams["eps_end"],
+        #    hparams["eps_start"] - env.num_moves * 1 / hparams["eps_last_frame"],
+        # )
         if env_type == "zoo":
-            actions = {}
-            for agent in agents:
+            rewards = {}
+            for agent_id in env.agent_iter(
+                max_iter=env.num_agents
+            ):  # num_agents returns number of alive (non-done) agents
+                agent = agents_dict[agent_id]
                 # agent doesn't get to play_step, only env can, for multi-agent env compatibility
                 # reward, score, done = agent.play_step(nets[i], epsilon=1.0)
-                actions[agent.name] = agent.get_action(
-                    epsilon=1.0, device=tparams["device"]
+                action = action_space("agent_0").sample()  # TODO: agent.get_action()
+                action = agent.get_action(
+                    # models[0],
+                    # epsilon=epsilon,
+                    # device=tparams["device"],
+                    observation,
+                    step=0,
                 )
+                logger.debug("debug action", action)
+                logger.debug("debug step")
+                logger.debug(env.__dict__)
 
-            observations, rewards, terminateds, truncateds, infos = env.step(action)
-            dones = {
-                key: terminated or truncateds[key]
-                for (key, terminated) in terminateds.items()
-            }
+                # NB! both AIntelope Zoo and Gridworlds Zoo wrapper in AIntelope provide slightly modified Zoo API. Normal Zoo sequential API step() method does not return values and is not allowed to return values else Zoo API tests will fail.
+                (
+                    observation,
+                    reward,
+                    terminated,
+                    truncated,
+                    info,
+                ) = env.step_single_agent(
+                    action
+                )  # TODO: parallel env support
+                logger.debug((observation, reward, terminated, truncated, info))
+                done = terminated or truncated
+                dones[agent.id] = done
+                rewards[agent] = reward
         else:
             # the assumption by non-zoo env will be 1 agent generally I think
+            rewards = {}
             for agent, model in zip(agents, models):
                 reward, score, done = agent.play_step(model, epsilon, tparams["device"])
-                dones = [done]
-                rewards = [reward]
-        episode_rewards += rewards
+                dones[agent.id] = done
+                rewards[agent] = reward
+
+        episode_rewards += rewards  # Counter class allows addition per dictionary keys
         if render_mode is not None:
             env.render(render_mode)
 

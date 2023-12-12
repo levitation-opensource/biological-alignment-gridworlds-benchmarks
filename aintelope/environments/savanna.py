@@ -136,7 +136,8 @@ def get_agent_pos_from_state(agent_state) -> List[PositionFloat]:
 class SavannaEnv:
     # @zoo-api
     metadata = {
-        "name": "savanna-v2",
+        "render.modes": ["human", "ansi", "rgb_array"],  # needed for zoo
+        "name": "savanna-v2",  # savanna-zoo-parallel-v2
         "render_fps": 3,
         "render_agent_radius": 5,
         "render_agent_color": (200, 50, 0),
@@ -198,6 +199,9 @@ class SavannaEnv:
         self.human_render_state = None
         self.ascii_render_state = None
         self.dones = None
+        self.infos = {
+            agent: {} for agent in self.possible_agents
+        }  # needed for Zoo sequential API
 
     def seed(self, seed: Optional[int] = None) -> None:
         self.np_random, seed = seeding.np_random(seed)
@@ -216,7 +220,9 @@ class SavannaEnv:
         self.seed(seed)
 
         self.agents = self.possible_agents[:]
-        # self.rewards = {agent: 0 for agent in self.agents}
+        self.rewards = {
+            agent: 0.0 for agent in self.agents
+        }  # storing in self is needed for Zoo sequential API
         # self._cumulative_rewards = {agent: 0 for agent in self.agents}
         # self.dones = {agent: False for agent in self.agents}
         # self.infos = {agent: {} for agent in self.agents}
@@ -251,6 +257,7 @@ class SavannaEnv:
         - observations
         - rewards
         - dones
+        - truncateds
         - info
         dicts where each dict looks like {agent_1: action_of_agent_1, agent_2: action_of_agent_2}
         or generally {<agent_name>: <agent_action or None if agent is done>}
@@ -259,12 +266,12 @@ class SavannaEnv:
         # If a user passes in actions with no agents, then just return empty observations, etc.
         if not actions:
             self.agents = []
-            return {}, {}, {}, {}
+            return {}, {}, {}, {}, {}
 
         if self.agents == []:
             raise ValueError("No agents found; num_iters reached?")
 
-        rewards = {}
+        self.rewards = {}  # storing in self is needed for Zoo sequential API
         for agent in self.agents:
             action = actions.get(agent)
             if isinstance(action, dict):
@@ -282,7 +289,7 @@ class SavannaEnv:
             min_grass_distance = distance_to_closest_item(
                 self.agent_states[agent], self.grass_patches
             )
-            rewards[agent] = reward_agent(min_grass_distance)
+            self.rewards[agent] = reward_agent(min_grass_distance)
 
         self.num_moves += 1
         env_done = (self.num_moves >= self.metadata["num_iters"]) or all(
@@ -299,11 +306,15 @@ class SavannaEnv:
         infos: Dict[AgentId, dict] = {agent: {} for agent in self.agents}
 
         if env_done:
-            self.agents = []
-        logger.debug("debug return", observations, rewards, self.dones, infos)
+            self.agents = (
+                []
+            )  # TODO: normally when one agent dies, then only that dead agent should be removed from self.agents
+        logger.debug("debug return", observations, self.rewards, self.dones, infos)
+
+        # TODO: activate next agent and save in self.agent_selection
 
         terminateds = {key: False for key in self.dones.keys()}
-        return observations, rewards, self.dones, terminateds, infos
+        return observations, self.rewards, self.dones, terminateds, infos
 
     def observe(self, agent: str) -> npt.NDArray[ObservationFloat]:
         """Return observation of given agent."""
@@ -326,6 +337,20 @@ class SavannaEnv:
     def set_agent_position(self, agent: str, loc: npt.NDArray[ObservationFloat]):
         """Move the agent to a location. Tests and inference"""
         self.agent_states[agent] = loc
+
+    def observe_from_location(self, agents_coordinates: Dict):
+        """This method is read-only (does not change the actual state of the environment nor the actual state of agents).
+        Each given agent observes itself and the environment as if the agent was in the given location.
+        """
+        observations = {}
+        for agent, coordinate in agents_coordinates.items():
+            original_coordinate = self.agent_states[agent]  # save original state
+            self.set_agent_position(agent, np.array(coordinate))
+            observations[agent] = self.observe(agent)
+            self.set_agent_position(
+                agent, original_coordinate
+            )  # restore original state
+        return observations
 
     def state_to_namedtuple(self, state: npt.NDArray[ObservationFloat]) -> NamedTuple:
         """Method to convert a state array into a named tuple."""

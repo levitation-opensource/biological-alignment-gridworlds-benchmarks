@@ -1,3 +1,5 @@
+import sys
+import os
 import pytest
 import numpy as np
 
@@ -42,3 +44,7 @@ def test_get_agent_pos_from_stats():
 
 def test_observation_spaces():
     pass  # TODO
+
+
+if __name__ == "__main__" and os.name == "nt":  # detect debugging
+    pytest.main([__file__])  # run tests only in this file
