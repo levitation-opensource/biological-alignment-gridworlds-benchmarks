@@ -1,7 +1,7 @@
 import sys
 import os
 import pytest
-from typing import Tuple
+from typing import Tuple, Dict
 
 from omegaconf import OmegaConf, DictConfig
 
@@ -12,10 +12,7 @@ from tests.test_config import (
 from aintelope.training.simple_eval import run_episode
 
 
-def test_qagent_in_savanna_zoo_sequential(  # TODO
-    tparams_hparams: Tuple[DictConfig, DictConfig, OmegaConf]
-) -> None:
-    full_params = tparams_hparams
+def test_qagent_in_savanna_zoo_sequential(full_params: Dict) -> None:  # TODO
     params_savanna_zoo = {
         "agent_id": "q_agent",
         "env": "savanna-zoo-sequential-v2",
@@ -37,10 +34,7 @@ def test_qagent_in_savanna_zoo_sequential(  # TODO
     run_episode(full_params=full_params)
 
 
-def test_qagent_in_savanna_gridworlds_sequential(
-    tparams_hparams: Tuple[DictConfig, DictConfig]
-) -> None:
-    full_params = tparams_hparams
+def test_qagent_in_savanna_gridworlds_sequential(full_params: Dict) -> None:
     params_savanna_zoo = {
         "agent_id": "q_agent",
         "env": "savanna-safetygrid-sequential-v1",
@@ -64,9 +58,9 @@ def test_qagent_in_savanna_gridworlds_sequential(
 # TODO: parallel API support
 
 # def test_qagent_in_savanna_zoo_parallel(  # TODO
-#    tparams_hparams: Tuple[DictConfig, DictConfig]
+#    full_params: Dict
 # ) -> None:
-#    full_params = tparams_hparams
+#
 #    params_savanna_zoo = {
 #        "agent_id": "q_agent",
 #        "env": "savanna-zoo-parallel-v2",
@@ -89,9 +83,9 @@ def test_qagent_in_savanna_gridworlds_sequential(
 
 
 # def test_qagent_in_savanna_gridworlds_parallel(
-#    tparams_hparams: Tuple[DictConfig, DictConfig]
+#    full_params: Dict
 # ) -> None:
-#    full_params = tparams_hparams
+#
 #    params_savanna_zoo = {
 #        "agent_id": "q_agent",
 #        "env": "savanna-safetygrid-parallel-v1",
