@@ -64,6 +64,8 @@ def test_training_pipeline_instinct():
         assert ret.returncode == 0, "Trainer baseline caused an error!"
 
 
-if __name__ == "__main__" and sys.gettrace() is not None:  # detect debugging
+if (
+    __name__ == "__main__" and os.name == "nt" and sys.gettrace() is not None
+):  # detect debugging
     register_resolvers()  # needs to be called only once
     pytest.main([__file__])  # run tests only in this file

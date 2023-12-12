@@ -1,4 +1,5 @@
 import sys
+import os
 import pytest
 from typing import Tuple
 
@@ -111,5 +112,7 @@ def test_qagent_in_savanna_gridworlds_sequential(
 #    run_episode(tparams=tparams, hparams=hparams)
 
 
-if __name__ == "__main__" and sys.gettrace() is not None:  # detect debugging
+if (
+    __name__ == "__main__" and os.name == "nt" and sys.gettrace() is not None
+):  # detect debugging
     pytest.main([__file__])  # run tests only in this file

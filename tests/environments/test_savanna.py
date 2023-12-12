@@ -1,4 +1,5 @@
 import sys
+import os
 import pytest
 import numpy as np
 
@@ -45,5 +46,7 @@ def test_observation_spaces():
     pass  # TODO
 
 
-if __name__ == "__main__" and sys.gettrace() is not None:  # detect debugging
+if (
+    __name__ == "__main__" and os.name == "nt" and sys.gettrace() is not None
+):  # detect debugging
     pytest.main([__file__])  # run tests only in this file
