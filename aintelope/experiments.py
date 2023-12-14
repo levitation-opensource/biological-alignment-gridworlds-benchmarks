@@ -6,6 +6,16 @@ from omegaconf import DictConfig
 import os
 from pathlib import Path
 
+from aintelope.training.dqn_training import Trainer
+
+from aintelope.agents import (
+    Agent,
+    PettingZooEnv,
+    Environment,
+    register_agent_class,
+)
+
+# initialize environment registries
 from pettingzoo import AECEnv, ParallelEnv
 from aintelope.environments.savanna_zoo import (
     SavannaZooParallelEnv,
@@ -16,23 +26,18 @@ from aintelope.environments.savanna_safetygrid import (
     SavannaGridworldSequentialEnv,
 )
 from aintelope.environments.savanna_safetygrid import SavannaGridworldSequentialEnv
+from aintelope.environments import get_env_class
 
-from aintelope.models.dqn import DQN
-from aintelope.agents import (
-    Agent,
-    PettingZooEnv,
-    Environment,
-    register_agent_class,
-)
-from aintelope.agents.instinct_agent import QAgent  # initialize agent registry
+# initialize agent registries
+from aintelope.agents.instinct_agent import InstinctAgent
+from aintelope.agents.q_agent import QAgent 
 from aintelope.agents import get_agent_class
-from aintelope.training.dqn_training import Trainer
-
 
 def run_experiment(cfg: DictConfig) -> None:
     logger = logging.getLogger("aintelope.experiment")
 
     # Environment
+    '''
     hparams = cfg.hparams
     if hparams.env == "savanna-zoo-parallel-v2":
         env = SavannaZooParallelEnv(env_params=hparams.env_params)
@@ -44,8 +49,8 @@ def run_experiment(cfg: DictConfig) -> None:
         env = SavannaGridworldSequentialEnv(env_params=hparams.env_params)
     else:
         raise NotImplementedError()
-
-    action_space = env.action_space
+    '''
+    env = get_env_class(cfg.hparams.env)(env_params=cfg.hparams.env_params)
 
     if isinstance(env, ParallelEnv):
         (
@@ -68,7 +73,7 @@ def run_experiment(cfg: DictConfig) -> None:
 
     # Common trainer for each agent's models
     trainer = Trainer(
-        cfg, n_observations, action_space
+        cfg, n_observations, env.action_space
     )  # TODO: have a section in params for trainer? its trainer and hparams now tho
 
     # Agents
