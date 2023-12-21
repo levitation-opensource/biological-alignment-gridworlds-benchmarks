@@ -211,7 +211,7 @@ def run_episode(full_params: Dict) -> None:
 
         if any(dones.values()):
             for agent in agents:
-                if dones[agent.id] and verbose:
+                if dones.get(agent.id, False) and verbose:
                     logger.warning(
                         f"Uhoh! Your agent {agent.id} terminated during warmup"
                         "on step {step}/{warm_start_steps}"
