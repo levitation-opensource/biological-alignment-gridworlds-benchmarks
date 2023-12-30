@@ -61,7 +61,7 @@ def run_experiment(cfg: DictConfig) -> None:
         agents[-1].reset(observation)
         trainer.add_agent(agent_id, observation.shape, env.action_space)
 
-    # Warmup NIY
+    # Warmup not yet implemented
     # for _ in range(hparams.warm_start_steps):
     #    agents.play_step(self.net, epsilon=1.0)
 
