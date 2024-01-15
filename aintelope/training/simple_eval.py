@@ -101,8 +101,6 @@ def run_episode(full_params: Dict) -> None:
     else:
         raise NotImplementedError(f"Unknown environment type {type(env)}")
 
-    action_space = env.action_space
-
     # Common trainer for each agent's models
     trainer = Trainer(full_params)
 
@@ -116,10 +114,10 @@ def run_episode(full_params: Dict) -> None:
 
     agent_spec = hparams["agent_id"]  # TODO: why is this value a list?
     if isinstance(agent_spec, list) and len(agent_spec) == 1:
+        # NB! after this step the agent_spec is not a list anymore and the following if condition will be False, so do not try to merge these "if" branches.
         agent_spec = agent_spec[0]
-    if isinstance(agent_spec, list):  # or env_params["amount_agents"] > 1:
-        if not isinstance(agent_spec, list):
-            agent_spec = [agent_spec]
+
+    if isinstance(agent_spec, list):
         if len(models) < len(agent_spec):
             models *= len(
                 agent_spec
