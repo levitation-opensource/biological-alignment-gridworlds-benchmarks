@@ -23,7 +23,8 @@ from aintelope.environments.savanna_zoo import SavannaZooParallelEnv
 from aintelope.environments.env_utils.distance import distance_to_closest_item
 
 
-def test_pettingzoo_api_parallel():
+@pytest.mark.parametrize("execution_number", range(10))
+def test_pettingzoo_api_parallel(execution_number):
     # TODO: refactor these values out to a test-params file
     env_params = {
         "num_iters": 500,  # duration of the game
@@ -34,13 +35,37 @@ def test_pettingzoo_api_parallel():
         "amount_grass_patches": 2,
         "amount_water_holes": 2,
     }
-    parallel_env = zoo.SavannaZooParallelEnv(env_params=env_params)
-    # TODO: Nathan was able to get the sequential-turn env to work, using this conversion, but not the parallel env. why??
-    # sequential_env = parallel_to_aec(parallel_env)
-    parallel_api_test(parallel_env, num_cycles=10)
+    env = zoo.SavannaZooParallelEnv(env_params=env_params)
+    env.seed(execution_number)
+
+    # sequential_env = parallel_to_aec(env)
+    parallel_api_test(env, num_cycles=10)
 
 
-def test_zoo_seed():
+@pytest.mark.parametrize("execution_number", range(10))
+def test_pettingzoo_api_parallel_with_death(execution_number):
+    # TODO: refactor these values out to a test-params file
+    env_params = {
+        "num_iters": 500,  # duration of the game
+        "map_min": 0,
+        "map_max": 100,
+        "render_map_max": 100,
+        "amount_agents": 2,  # needed for death test
+        "amount_grass_patches": 2,
+        "amount_water_holes": 2,
+        "test_death": True,
+    }
+    env = zoo.SavannaZooParallelEnv(env_params=env_params)
+    env.seed(execution_number)
+
+    # sequential_env = parallel_to_aec(env)
+    parallel_api_test(env, num_cycles=10)
+
+
+@pytest.mark.parametrize("execution_number", range(10))
+def test_zoo_seed(execution_number):
+    np.random.seed(execution_number)
+
     try:
         parallel_seed_test(zoo.SavannaZooParallelEnv, num_cycles=10)
     except TypeError:
@@ -62,9 +87,10 @@ def test_zoo_agent_states():
     )
 
 
-def test_zoo_reward_agent():
+@pytest.mark.parametrize("execution_number", range(10))
+def test_zoo_reward_agent(execution_number):
     env = zoo.SavannaZooParallelEnv()
-    env.reset()
+    env.reset(seed=execution_number)
     # single grass patch
     agent_pos = np.random.randint(env.metadata["map_min"], env.metadata["map_max"], 2)
     grass_patch = np.random.randint(env.metadata["map_min"], env.metadata["map_max"], 2)
@@ -119,12 +145,14 @@ def test_zoo_move_agent():
         assert agent_states[agent].dtype == zoo.PositionFloat
 
 
-def test_zoo_step_result():
+@pytest.mark.parametrize("execution_number", range(10))
+def test_zoo_step_result(execution_number):
     env = zoo.SavannaZooParallelEnv(
         env_params={"num_iters": 2}
     )  # default is 1 iter which means that the env is done after 1 step below and the test will fail
     num_agents = len(env.possible_agents)
     assert num_agents, f"expected 1 agent, got: {num_agents}"
+    env.seed(execution_number)
     env.reset()
 
     agent = env.possible_agents[0]
@@ -144,9 +172,11 @@ def test_zoo_step_result():
     assert isinstance(rewards[agent], np.float64), "reward of agent is not a float64"
 
 
-def test_zoo_done_step():
-    env = zoo.SavannaZooParallelEnv()
+@pytest.mark.parametrize("execution_number", range(10))
+def test_zoo_done_step(execution_number):
+    env = zoo.SavannaZooParallelEnv(env_params={"amount_agents": 1})
     assert len(env.possible_agents) == 1
+    env.seed(execution_number)
     env.reset()
 
     agent = env.possible_agents[0]  # TODO: multi-agent iteration
@@ -228,3 +258,5 @@ def test_performance_benchmark():
 
 if __name__ == "__main__" and os.name == "nt":  # detect debugging
     pytest.main([__file__])  # run tests only in this file
+    # test_pettingzoo_api_parallel_with_death()
+    # test_zoo_done_step()

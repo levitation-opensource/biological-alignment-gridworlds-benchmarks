@@ -1,6 +1,7 @@
 import sys
 import os
 import pytest
+import numpy as np
 from typing import Tuple, Dict
 
 from omegaconf import OmegaConf, DictConfig
@@ -12,7 +13,12 @@ from tests.test_config import (
 from aintelope.training.simple_eval import run_episode
 
 
-def test_randomwalkagent_in_savanna_zoo_sequential(tparams_hparams: Dict) -> None:
+@pytest.mark.parametrize("execution_number", range(10))
+def test_randomwalkagent_in_savanna_zoo_sequential(
+    tparams_hparams: Dict, execution_number
+) -> None:
+    np.random.seed(execution_number)
+
     full_params = tparams_hparams
     params_randomwalkagent = {
         "agent": "random_walk_agent",
@@ -34,9 +40,12 @@ def test_randomwalkagent_in_savanna_zoo_sequential(tparams_hparams: Dict) -> Non
     run_episode(full_params=full_params)
 
 
+@pytest.mark.parametrize("execution_number", range(10))
 def test_onestepperfectpredictionagent_in_savanna_zoo_sequential(
-    tparams_hparams: Dict,
+    tparams_hparams: Dict, execution_number
 ) -> None:
+    np.random.seed(execution_number)
+
     full_params = tparams_hparams
     params_perfectpredictionagent = {
         "agent": "one_step_perfect_prediction_agent",
@@ -60,9 +69,12 @@ def test_onestepperfectpredictionagent_in_savanna_zoo_sequential(
     run_episode(full_params=full_params)
 
 
+@pytest.mark.parametrize("execution_number", range(10))
 def test_iterativeweightoptimizationagent_in_savanna_zoo_sequential(
-    tparams_hparams: Dict,
+    tparams_hparams: Dict, execution_number
 ) -> None:
+    np.random.seed(execution_number)
+
     full_params = tparams_hparams
     params_weightoptimizationagent = {
         "agent": "iterative_weight_optimization_agent",
@@ -86,8 +98,9 @@ def test_iterativeweightoptimizationagent_in_savanna_zoo_sequential(
     run_episode(full_params=full_params)
 
 
+@pytest.mark.parametrize("execution_number", range(10))
 def test_randomwalkagent_in_savanna_gridworlds_sequential(
-    tparams_hparams: Dict,
+    tparams_hparams: Dict, execution_number
 ) -> None:
     full_params = tparams_hparams
     params_randomwalkagent = {
@@ -103,6 +116,7 @@ def test_randomwalkagent_in_savanna_gridworlds_sequential(
             "amount_agents": 1,  # for now only one agent
             "amount_grass_patches": 2,
             "amount_water_holes": 0,
+            "seed": execution_number,
         },
         "agent_params": {},
     }
@@ -110,8 +124,9 @@ def test_randomwalkagent_in_savanna_gridworlds_sequential(
     run_episode(full_params=full_params)
 
 
+@pytest.mark.parametrize("execution_number", range(10))
 def test_onestepperfectpredictionagent_in_savanna_gridworlds_sequential(
-    tparams_hparams: Dict,
+    tparams_hparams: Dict, execution_number
 ) -> None:
     full_params = tparams_hparams
     params_perfectpredictionagent = {
@@ -127,6 +142,7 @@ def test_onestepperfectpredictionagent_in_savanna_gridworlds_sequential(
             "amount_agents": 1,  # for now only one agent
             "amount_grass_patches": 2,
             "amount_water_holes": 0,
+            "seed": execution_number,
         },
         "agent_params": {},
     }
@@ -136,8 +152,9 @@ def test_onestepperfectpredictionagent_in_savanna_gridworlds_sequential(
     run_episode(full_params=full_params)
 
 
+@pytest.mark.parametrize("execution_number", range(10))
 def test_iterativeweightoptimizationagent_in_savanna_gridworlds_sequential(
-    tparams_hparams: Dict,
+    tparams_hparams: Dict, execution_number
 ) -> None:
     full_params = tparams_hparams
     params_weightoptimizationagent = {
@@ -153,6 +170,7 @@ def test_iterativeweightoptimizationagent_in_savanna_gridworlds_sequential(
             "amount_agents": 1,  # for now only one agent
             "amount_grass_patches": 2,
             "amount_water_holes": 0,
+            "seed": execution_number,
         },
         "agent_params": {},
     }

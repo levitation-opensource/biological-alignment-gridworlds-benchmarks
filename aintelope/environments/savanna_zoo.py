@@ -15,6 +15,7 @@ from aintelope.environments.savanna import (
     reward_agent,
     PositionFloat,
     Action,
+    Step,
 )
 
 logger = logging.getLogger("aintelope.environments.savanna_zoo")
@@ -27,13 +28,28 @@ class SavannaZooParallelEnv(SavannaEnv, ParallelEnv):
         SavannaEnv.__init__(self, env_params)
         ParallelEnv.__init__(self)
 
-    @functools.lru_cache(maxsize=None)
     def observation_space(self, agent: str):
         return self._observation_spaces[agent]
 
-    @functools.lru_cache(maxsize=None)
     def action_space(self, agent: str):
         return self._action_spaces[agent]
+
+    def step(self, actions: Dict[str, Action], *args, **kwargs) -> Step:
+        (observations, rewards, dones, truncateds, infos) = SavannaEnv.step(
+            self, actions, *args, **kwargs
+        )
+
+        dones = dict(
+            dones
+        )  # NB! clone since it will be modified below (dones is reference to self.dones)
+        for agent in list(
+            self.agents
+        ):  # clone list since it will be modified during iteration
+            if self.dones[agent]:
+                self.agents.remove(agent)
+                del self.dones[agent]
+
+        return (observations, rewards, dones, truncateds, infos)
 
 
 class SavannaZooSequentialEnv(SavannaEnv, AECEnv):
@@ -43,11 +59,9 @@ class SavannaZooSequentialEnv(SavannaEnv, AECEnv):
         SavannaEnv.__init__(self, env_params)
         AECEnv.__init__(self)
 
-    @functools.lru_cache(maxsize=None)
     def observation_space(self, agent: str):
         return self._observation_spaces[agent]
 
-    @functools.lru_cache(maxsize=None)
     def action_space(self, agent: str):
         return self._action_spaces[agent]
 
@@ -63,24 +77,47 @@ class SavannaZooSequentialEnv(SavannaEnv, AECEnv):
     def agent_selection(self):
         return self._next_agent
 
-    @property
-    def _cumulative_rewards(self):
-        return self.rewards
-
     def reset(self, *args, **kwargs):
         self._next_agent = self.possible_agents[0]
         self._next_agent_index = 0
         self._all_agents_done = False
-        SavannaEnv.reset(self, *args, **kwargs)
+        return SavannaEnv.reset(self, *args, **kwargs)
 
-    def step(self, action: Action, *args, **kwargs):
+    def step(self, action: Action, *args, **kwargs) -> None:
         self.step_single_agent(
             action, *args, **kwargs
         )  # NB! no return here, else Zoo tests will fail
 
     def step_single_agent(self, action: Action, *args, **kwargs):
+        # a dead agent must call .step(None) once more after becoming dead. Only after that call will this dead agent be removed from various dictionaries and from .agent_iter loop.
+        if self.terminations[self._next_agent] or self.truncations[self._next_agent]:
+            if action is not None:
+                raise ValueError("When an agent is dead, the only valid action is None")
+
+            # Dead agents should stay in the agent_iter for one more loop, but should get None as action.
+            # Dead agents need to be removed from agents list only upon next step function on this dead agent.
+            del self.dones[self._next_agent]
+            del self.infos[self._next_agent]
+            # del self._cumulative_rewards[self._next_agent]
+            self.agents.remove(self._next_agent)
+
+            reward = 0.0  # other agents do not collect reward from current agent's "dead step" and rewards from previous step need to be cleared
+            self.rewards = {agent: reward for agent in self.agents}
+
+            self._move_to_next_agent()
+            return
+
+        for agent in self.agents:
+            # the agent should be visible in .rewards after it dies (until its "dead step"), but during next agent's step it should get zero reward
+            if self.dones[agent]:
+                self.rewards[agent] = 0.0
+
+        self._cumulative_rewards[
+            self._next_agent
+        ] = 0.0  # this needs to be so according to Zoo unit test. See https://github.com/Farama-Foundation/PettingZoo/blob/master/pettingzoo/test/api_test.py
+
         # NB! both AIntelope Zoo and Gridworlds Zoo wrapper in AIntelope provide slightly modified Zoo API. Normal Zoo sequential API step() method does not return values.
-        result = SavannaEnv.step(self, {self.agent_selection: action}, *args, **kwargs)
+        result = SavannaEnv.step(self, {self._next_agent: action}, *args, **kwargs)
         (
             observations,
             scores,
@@ -88,9 +125,10 @@ class SavannaZooSequentialEnv(SavannaEnv, AECEnv):
             truncateds,
             infos,
         ) = result
+
         step_agent = (
-            self.agent_selection
-        )  # NB! the agent_selection will change after call to _move_to_next_agent()
+            self._next_agent
+        )  # NB! the agent_selection will change after call to _move_to_next_agent() so we need to save the agent_id which just took the step
         self._move_to_next_agent()
         return (
             observations[step_agent],
@@ -111,8 +149,7 @@ class SavannaZooSequentialEnv(SavannaEnv, AECEnv):
                 self.possible_agents
             )  # loop over agents repeatedly     # https://pettingzoo.farama.org/content/basic_usage/#interacting-with-environments
             agent = self.possible_agents[self._next_agent_index]
-
-            done = self.terminations[agent] or self.truncations[agent]
+            done = agent not in self.agents
             continue_search_for_non_done_agent = done
 
             search_loops_count += 1

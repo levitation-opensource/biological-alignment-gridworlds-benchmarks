@@ -137,7 +137,7 @@ class SavannaEnv:
     # @zoo-api
     metadata = {
         "render.modes": ["human", "ansi", "rgb_array"],  # needed for zoo
-        "name": "savanna-v2",  # savanna-zoo-parallel-v2
+        "name": "savanna-v2",
         "render_agent_radius": 5,
         "render_agent_color": (200, 50, 0),
         "render_grass_radius": 5,
@@ -150,11 +150,17 @@ class SavannaEnv:
         "amount_grass_patches": 2,
         "amount_water_holes": 0,
         "num_iters": 1,
+        "test_death": False,
+        "test_death_probability": 0.33,
+        "seed": None,  # used for providing seed via env_params during some tests
     }
 
     def __init__(self, env_params: Optional[Dict] = None):
         if env_params is None:
             env_params = {}
+        self.metadata = dict(
+            self.metadata
+        )  # NB! Need to clone in order to not modify the default dict. Similar problem to mutable default arguments.
         self.metadata.update(env_params)
         logger.info(f"initializing savanna env with params: {self.metadata}")
 
@@ -190,7 +196,7 @@ class SavannaEnv:
 
         # our own state
         self.agent_states: AgentStates = {}
-        self.seed()
+        self.seed(self.metadata["seed"])
 
         render_settings = RenderSettings(self.metadata)
         self.render_state = RenderState(render_settings)
@@ -215,15 +221,17 @@ class SavannaEnv:
         And must set up the environment so that render(), step(), and observe()
         can be called without issues.
         """
-        self.seed(seed)
+        # if seed is not provided as an argument to reset() then do not re-seed. It is possible that seed was set during construction
+        if seed is not None:
+            self.seed(seed)
 
-        self.agents = self.possible_agents[:]
+        self.agents = list(
+            self.possible_agents
+        )  # clone since the agents list may be modified when some agent dies
         self.rewards = {
             agent: 0.0 for agent in self.agents
         }  # storing in self is needed for Zoo sequential API
-        # self._cumulative_rewards = {agent: 0 for agent in self.agents}
-        # self.dones = {agent: False for agent in self.agents}
-        # self.infos = {agent: {} for agent in self.agents}
+        self._cumulative_rewards = {agent: 0.0 for agent in self.agents}
         self.grass_patches = self.np_random.integers(
             self.metadata["map_min"],
             self.metadata["map_max"],
@@ -243,12 +251,10 @@ class SavannaEnv:
         self.num_moves = 0
 
         # # cycle through the agents; needed for wrapper
-        # self._agent_selector = agent_selector(self.agents)
-        # self.agent_selection = self._agent_selector.next()
         self.dones = {agent: False for agent in self.agents}
         observations = {agent: self.observe(agent) for agent in self.agents}
-        infos = {agent: {} for agent in self.agents}
-        return observations, infos  # TODO remove these returns as unused?
+        self.infos = {agent: {} for agent in self.agents}
+        return observations, self.infos
 
     def step(self, actions: Dict[str, Action]) -> Step:
         """step(action) takes in an action for each agent and should return the
@@ -263,7 +269,6 @@ class SavannaEnv:
         logger.debug("debug actions", actions)
         # If a user passes in actions with no agents, then just return empty observations, etc.
         if not actions:
-            self.agents = []
             return {}, {}, {}, {}, {}
 
         if self.agents == []:
@@ -274,28 +279,39 @@ class SavannaEnv:
             action = actions.get(agent)
             if isinstance(action, dict):
                 action = action.get(agent)
-            if action is None:
-                continue
 
-            logger.debug("debug action", action)
-            self.agent_states[agent] = move_agent(
-                self.agent_states[agent],
-                action,
-                map_min=self.metadata["map_min"],
-                map_max=self.metadata["map_max"],
-            )
+            if action is not None:
+                if self.dones[agent]:  # non-None action on done agent?
+                    raise ValueError(
+                        "When an agent is dead, the only valid action is None"
+                    )
+
+                logger.debug("debug action", action)
+                self.agent_states[agent] = move_agent(
+                    self.agent_states[agent],
+                    action,
+                    map_min=self.metadata["map_min"],
+                    map_max=self.metadata["map_max"],
+                )
+
+            # NB! reward should be calculated for all agents, including those who were not specified in actions
             min_grass_distance = distance_to_closest_item(
                 self.agent_states[agent], self.grass_patches
             )
             self.rewards[agent] = reward_agent(min_grass_distance)
+            self._cumulative_rewards[agent] += self.rewards[agent]
+
+            # NB! any agent could die at any other agent's step
+            if (
+                self.metadata["test_death"]
+                and self.np_random.random() < self.metadata["test_death_probability"]
+            ):
+                self.dones[agent] = True
 
         self.num_moves += 1
-        env_done = (self.num_moves >= self.metadata["num_iters"]) or all(
-            [actions.get(agent) is None for agent in self.agents]
-        )
-        self.dones = {
-            agent: env_done or (actions.get(agent) is None) for agent in self.agents
-        }
+
+        if self.num_moves >= self.metadata["num_iters"]:
+            self.dones = {agent: True for agent in self.agents}
 
         observations = {agent: self.observe(agent) for agent in self.agents}
 
@@ -303,16 +319,10 @@ class SavannaEnv:
         # still be an entry for each agent
         infos: Dict[AgentId, dict] = {agent: {} for agent in self.agents}
 
-        if env_done:
-            self.agents = (
-                []
-            )  # TODO: normally when one agent dies, then only that dead agent should be removed from self.agents
         logger.debug("debug return", observations, self.rewards, self.dones, infos)
 
-        # TODO: activate next agent and save in self.agent_selection
-
-        terminateds = {key: False for key in self.dones.keys()}
-        return observations, self.rewards, self.dones, terminateds, infos
+        truncateds = {key: False for key in self.dones.keys()}
+        return observations, self.rewards, self.dones, truncateds, infos
 
     def observe(self, agent: str) -> npt.NDArray[ObservationFloat]:
         """Return observation of given agent."""
@@ -320,7 +330,9 @@ class SavannaEnv:
         def stack(*args) -> npt.NDArray[ObservationFloat]:
             return np.hstack(args, dtype=ObservationFloat)
 
-        observations = stack(self.agent_states[agent])
+        observations = np.concatenate(
+            [self.agent_states[agent2] for agent2 in self.possible_agents]
+        )
         for x in self.grass_patches:
             observations = stack(observations, x)
         for x in self.water_holes:
