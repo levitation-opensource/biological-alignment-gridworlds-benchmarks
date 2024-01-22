@@ -9,7 +9,6 @@ from omegaconf import OmegaConf, DictConfig
 from tests.test_config import (
     root_dir,
     tparams_hparams,
-    tparams_hparams_debug,
 )
 from aintelope.training.simple_eval import run_episode
 
@@ -224,10 +223,3 @@ def test_instinctagent_in_savanna_gridworlds_parallel_with_death(
 
 if __name__ == "__main__" and os.name == "nt":  # detect debugging
     pytest.main([__file__])  # run tests only in this file
-    # test_instinctagent_in_savanna_zoo_sequential_with_death(tparams_hparams_debug())
-    # test_instinctagent_in_savanna_gridworlds_sequential_with_death(
-    #    tparams_hparams_debug()
-    # )
-    # test_instinctagent_in_savanna_zoo_parallel_with_death(
-    #    tparams_hparams_debug()
-    # )

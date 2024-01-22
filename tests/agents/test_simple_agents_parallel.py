@@ -9,7 +9,6 @@ from omegaconf import OmegaConf, DictConfig
 from tests.test_config import (
     root_dir,
     tparams_hparams,
-    tparams_hparams_debug,
 )
 from aintelope.training.simple_eval import run_episode
 
@@ -186,4 +185,3 @@ def test_iterativeweightoptimizationagent_in_savanna_gridworlds_parallel(
 
 if __name__ == "__main__" and os.name == "nt":  # detect debugging
     pytest.main([__file__])  # run tests only in this file
-    # test_randomwalkagent_in_savanna_zoo_parallel(tparams_hparams_debug())

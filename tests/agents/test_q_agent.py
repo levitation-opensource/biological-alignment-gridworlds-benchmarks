@@ -9,7 +9,6 @@ from omegaconf import OmegaConf, DictConfig
 from tests.test_config import (
     root_dir,
     tparams_hparams,
-    tparams_hparams_debug,
 )
 from aintelope.training.simple_eval import run_episode
 
