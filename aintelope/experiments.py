@@ -5,8 +5,10 @@ from omegaconf import DictConfig
 
 import os
 from pathlib import Path
+import numpy as np
 
 from aintelope.training.dqn_training import Trainer
+from aintelope.analytics import recording as rec
 
 from aintelope.agents import (
     Agent,
@@ -81,6 +83,8 @@ def run_experiment(cfg: DictConfig) -> None:
     #    agents.play_step(self.net, epsilon=1.0)
 
     # Main loop
+    run_scores = dict(zip([a.id for a in agents], len(agents) * [[]]))
+
     for i_episode in range(cfg.hparams.num_episodes):
         # Reset
         if isinstance(env, ParallelEnv):
@@ -120,6 +124,9 @@ def run_experiment(cfg: DictConfig) -> None:
                 for agent in agents:
                     observation = observations[agent.id]
                     score = scores[agent.id]
+
+                    run_scores[agent.id].append(score)  # Save the score for records
+
                     done = dones[agent.id]
                     terminated = terminateds[agent.id]
                     if terminated:
@@ -127,7 +134,7 @@ def run_experiment(cfg: DictConfig) -> None:
                     agent.update(
                         env,
                         observation,
-                        score,
+                        score,  # TODO: make a function to handle obs->rew in Q-agent too, remove this
                         done,  # TODO: should it be "terminated" in place of "done" here?
                     )  # note that score is used ONLY by baseline
 
@@ -158,6 +165,8 @@ def run_experiment(cfg: DictConfig) -> None:
                             truncated,
                             info,
                         ) = result
+
+                        run_scores[agent.id].append(score)  # Save the score for records
 
                         done = terminated or truncated
 
@@ -197,10 +206,9 @@ def run_experiment(cfg: DictConfig) -> None:
             trainer.save_models(i_episode, dir_cp)
 
     record_path = Path(cfg.experiment_dir) / "memory_records.csv"
-    logger.info(f"Saving training records to disk at {record_path}")
-    record_path.parent.mkdir(exist_ok=True, parents=True)
-    for agent in agents:
-        agent.get_history().to_csv(record_path, index=False)
+    rec.record_history(
+        record_path, agents, env, run_scores
+    )  # TODO: consider packaging these in this file
 
 
 # @hydra.main(version_base=None, config_path="config", config_name="config_experiment")

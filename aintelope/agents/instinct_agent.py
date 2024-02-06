@@ -64,15 +64,16 @@ class InstinctAgent(QAgent):
         score: float = 0.0,
         done: bool = False,
         save_path: Optional[str] = None,
-    ) -> None:
+    ) -> float:
         """
         Takes observations and updates trainer on perceived experiences. Needed here to catch instincts.
 
         Args:
+            env: Environment
             observation: ObservationArray
             score: Only baseline uses score as a reward
             done: boolean whether run is done
-
+            save_path: str
         Returns:
             Reward: float
         """

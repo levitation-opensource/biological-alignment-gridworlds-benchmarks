@@ -1,0 +1,112 @@
+import pandas as pd
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+
+from typing import Optional, Tuple, NamedTuple, List
+import logging
+import csv
+
+# Library for handling saving to file
+
+logger = logging.getLogger("aintelope.analytics.recording")
+
+
+def record_history(record_path, agents, environment, run_scores):
+    """
+    Record history of the training to given path.
+    Data is saved step-wise, with each column containing what happened at one time period.
+    """
+    logger.info(f"Saving training records to disk at {record_path}")
+    record_path.parent.mkdir(exist_ok=True, parents=True)
+
+    # TODO: Add history of environments
+    # TODO: The old dataformat will not make sense in the old schema, now "all agents are one"
+    # and all episodes are one. Basically gather the info step by step in the main loop
+    # with columns: agents, episodes, iterations, score, env-info from step, -therest-
+
+    for agent in agents:
+        agent_data = get_agent_history(agent)
+        agent_data.insert(3, "Score", run_scores[agent.id])
+        agent_data.to_csv(record_path, index=False)
+
+
+def get_agent_history(agent) -> pd.DataFrame:
+    """
+    Method to get the history of the agent. Note that warm_start_steps are excluded.
+    warm_start_steps not used atm.
+    """
+    return pd.DataFrame(
+        columns=[
+            "state",
+            "action",
+            "reward",
+            "done",
+            "instinct_events",
+            "next_state",
+        ],
+        data=agent.history,  # self.warm_start_steps :],
+    )
+
+
+def process_history(
+    history_df: pd.DataFrame,
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Function to convert the agent history dataframe into individual dataframe for
+    agent position, grass and water locations. Instinct events are currently not
+    processed.
+    """
+    state_df = pd.DataFrame(history_df.state.to_list())
+    agent_df = pd.DataFrame(columns=["x", "y"], data=state_df.agent_coords.to_list())
+    grass_columns = [c for c in list(state_df) if c.startswith("grass")]
+    grass_df = state_df[grass_columns].applymap(lambda x: tuple(x))
+    grass_df = pd.DataFrame(columns=["x", "y"], data=set(grass_df.stack().to_list()))
+    water_columns = [c for c in list(state_df) if c.startswith("water")]
+    water_df = state_df[water_columns].applymap(lambda x: tuple(x))
+    water_df = pd.DataFrame(columns=["x", "y"], data=set(water_df.stack().to_list()))
+
+    return agent_df, grass_df, water_df
+
+
+def plot_history(agent, style: str = "thickness", color: str = "viridis") -> Figure:
+    """
+    Docstring missing, these are old functions I'm unsure are in use atm.
+    """
+    history_df = agent.get_history()
+    agent_df, food_df, water_df = agent.process_history(history_df)
+
+    fig, ax = plt.subplots(figsize=(8, 8))
+
+    if style == "thickness":
+        ax.plot(agent_df["x"], agent_df["y"], ".r-")
+    elif style == "colormap":
+        cmap = matplotlib.colormaps[color]
+
+        agent_arr = agent_df.to_numpy()  # coordinates x y
+        # coordinates are ordered in x1 y1 x2 y2
+        step_pairs = np.concatenate([agent_arr[:-1], agent_arr[1:]], axis=1)
+        unique_steps, step_freq = np.unique(step_pairs, axis=0, return_counts=True)
+
+        for line_segment, col in zip(unique_steps, step_freq / step_freq.max()):
+            if (line_segment[:2] == line_segment[2:]).all():  # agent did not move
+                im = ax.scatter(
+                    line_segment[0],
+                    line_segment[1],
+                    s=70,
+                    marker="o",
+                    color=cmap(col),
+                )
+            else:
+                ax.plot(line_segment[[0, 2]], line_segment[[1, 3]], color=cmap(col))
+
+        cbar = fig.colorbar(im)
+        cbar.set_label("Relative Frequency Agent")
+    else:
+        raise NotImplementedError(f"{style} is not a valid plot style!")
+
+    ax.plot(food_df["x"], food_df["y"], "xg", markersize=8, label="Food")
+    ax.plot(water_df["x"], water_df["y"], "xb", markersize=8, label="Water")
+    ax.legend()
+    plt.tight_layout()
+    return fig

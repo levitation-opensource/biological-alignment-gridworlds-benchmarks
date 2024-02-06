@@ -19,10 +19,6 @@ class Agent(ABC):
     def get_action(self, epsilon: float, device: str) -> Optional[int]:
         ...
 
-    @abstractmethod
-    def get_history() -> pd.DataFrame:
-        ...
-
 
 AGENT_REGISTRY: Mapping[str, Type[Agent]] = {}
 
