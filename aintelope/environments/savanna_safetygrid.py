@@ -4,26 +4,25 @@ from typing import Dict, NamedTuple, Optional, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
-from gymnasium.spaces import Box
-
-from aintelope.environments.env_utils.distance import distance_to_closest_item
-from aintelope.environments import register_env_class
-from ai_safety_gridworlds.helpers.gridworld_zoo_aec_env import GridworldZooAecEnv
-from ai_safety_gridworlds.helpers.gridworld_zoo_parallel_env import (
-    GridworldZooParallelEnv,
-    Actions,
-    INFO_OBSERVATION_COORDINATES,
-    INFO_OBSERVATION_LAYERS_CUBE,
-    INFO_AGENT_OBSERVATION_COORDINATES,
-    INFO_AGENT_OBSERVATION_LAYERS_CUBE,
-)
 from ai_safety_gridworlds.environments.aintelope.aintelope_smell import (
     DRINK_CHR,
     FOOD_CHR,
     GAME_ART,
 )
-from aintelope.environments.typing import Reward  # TODO: use np.ndarray or mo_reward
-from aintelope.environments.typing import AgentId, Info, Observation, ObservationFloat
+from ai_safety_gridworlds.helpers.gridworld_zoo_aec_env import GridworldZooAecEnv
+from ai_safety_gridworlds.helpers.gridworld_zoo_parallel_env import (
+    INFO_AGENT_OBSERVATION_COORDINATES,
+    INFO_AGENT_OBSERVATION_LAYERS_CUBE,
+    INFO_OBSERVATION_COORDINATES,
+    INFO_OBSERVATION_LAYERS_CUBE,
+    Actions,
+    GridworldZooParallelEnv,
+)
+from gymnasium.spaces import Box
+
+from aintelope.environments.env_utils.distance import distance_to_closest_item
+from aintelope.typing import Reward  # TODO: use np.ndarray or mo_reward
+from aintelope.typing import AgentId, Info, Observation, ObservationFloat
 
 logger = logging.getLogger("aintelope.environments.savanna_safetygrid")
 
@@ -772,7 +771,3 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
             "debug return", self.observations2, rewards2, terminateds, truncateds, infos
         )
         return self.observations2, rewards2, terminateds, truncateds, infos
-
-
-register_env_class("savanna-safetygrid-sequential-v1", SavannaGridworldSequentialEnv)
-register_env_class("savanna-safetygrid-parallel-v1", SavannaGridworldParallelEnv)

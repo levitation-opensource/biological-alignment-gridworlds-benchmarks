@@ -3,13 +3,8 @@ from typing import Dict, Optional
 
 from pettingzoo import AECEnv, ParallelEnv
 
-from aintelope.environments import register_env_class
-
-from aintelope.environments.savanna import (
-    SavannaEnv,
-    Action,
-    Step,
-)
+from aintelope.environments.savanna import SavannaEnv, Step
+from aintelope.typing import Action
 
 logger = logging.getLogger("aintelope.environments.savanna_zoo")
 
@@ -170,9 +165,3 @@ class SavannaZooSequentialEnv(SavannaEnv, AECEnv):
         # / while search_for_non_done_agent:
 
         self._next_agent = agent
-
-    # / def _move_to_next_agent(self):
-
-
-register_env_class("savanna-zoo-sequential-v2", SavannaZooSequentialEnv)
-register_env_class("savanna-zoo-parallel-v2", SavannaZooParallelEnv)

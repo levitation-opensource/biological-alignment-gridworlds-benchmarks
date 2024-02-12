@@ -10,7 +10,7 @@ from gymnasium.utils import seeding
 
 from aintelope.environments.env_utils.distance import distance_to_closest_item
 from aintelope.environments.env_utils.render_ascii import AsciiRenderState
-from aintelope.environments.typing import (
+from aintelope.typing import (
     Action,
     AgentId,
     AgentStates,

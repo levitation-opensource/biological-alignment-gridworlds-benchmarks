@@ -10,7 +10,7 @@ from pettingzoo.test.seed_test import seed_test
 from aintelope.environments.env_utils.distance import distance_to_closest_item
 from aintelope.environments.savanna import ACTION_MAP, move_agent, reward_agent
 from aintelope.environments.savanna_zoo import SavannaZooSequentialEnv
-from aintelope.environments.typing import PositionFloat
+from aintelope.typing import PositionFloat
 
 
 @pytest.mark.parametrize("execution_number", range(10))

@@ -1,7 +1,7 @@
 from typing import Dict, Union
 
-import numpy as np
 import gymnasium as gym
+import numpy as np
 from pettingzoo import AECEnv, ParallelEnv
 
 ObservationFloat = np.float32

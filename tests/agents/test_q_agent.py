@@ -1,8 +1,8 @@
 import os
 from typing import Dict
 
-import pytest
 import numpy as np
+import pytest
 from omegaconf import OmegaConf
 
 from aintelope.training.simple_eval import run_episode

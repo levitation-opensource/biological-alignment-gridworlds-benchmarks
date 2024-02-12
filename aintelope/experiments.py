@@ -7,15 +7,6 @@ from pettingzoo import AECEnv, ParallelEnv
 
 from aintelope.agents import get_agent_class
 from aintelope.environments import get_env_class
-from aintelope.environments.savanna_safetygrid import (
-    SavannaGridworldParallelEnv,
-    SavannaGridworldSequentialEnv,
-)
-from aintelope.environments.savanna_zoo import (
-    SavannaZooParallelEnv,
-    SavannaZooSequentialEnv,
-)
-from aintelope.environments.typing import Environment, PettingZooEnv
 from aintelope.training.dqn_training import Trainer
 
 

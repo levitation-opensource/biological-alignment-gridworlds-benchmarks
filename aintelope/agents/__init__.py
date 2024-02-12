@@ -1,13 +1,13 @@
 from typing import Mapping, Type
 
 from aintelope.agents.abstract_agent import Agent
-from aintelope.agents.simple_agents import (
-    RandomWalkAgent,
-    OneStepPerfectPredictionAgent,
-    IterativeWeightOptimizationAgent,
-)
-from aintelope.agents.q_agent import QAgent
 from aintelope.agents.instinct_agent import InstinctAgent
+from aintelope.agents.q_agent import QAgent
+from aintelope.agents.simple_agents import (
+    IterativeWeightOptimizationAgent,
+    OneStepPerfectPredictionAgent,
+    RandomWalkAgent,
+)
 
 AGENT_REGISTRY: Mapping[str, Type[Agent]] = {}
 
