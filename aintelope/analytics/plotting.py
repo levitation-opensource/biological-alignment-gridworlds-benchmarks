@@ -30,11 +30,11 @@ def plot_performance(all_events, save_path: Optional[str]):
     Plot performance between rewards and scores. 
     Accepts a list of event records from which a boxplot is done.
     """
-    keys = ['run_id','agent_id','reward','score']
-    data = pd.DataFrame(keys) test
+    keys = ['Run_id','Agent_id','Reward','Score']
+    data = pd.DataFrame(columns=keys)
     for events in all_events:
-        data.concat(events[keys]) test
-    data mean
+        data.concat(events[keys])
+    data.groupby(['Agent_id'])['Reward','Score'].mean()
     plot = plt.boxplot(data)
 
     if save_path:
