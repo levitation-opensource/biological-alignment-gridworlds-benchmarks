@@ -1,6 +1,8 @@
 timestamp: ${now:%Y%m%d%H%M%S}
-log_dir: outputs/${timestamp}/
 experiment_name: experiment
+events_dir: events.csv
+checkpoint_dir: checkpoints/
+log_dir: outputs/${timestamp}/
 experiment_dir: ${log_dir}/${experiment_name}/
 
 trainer_params:

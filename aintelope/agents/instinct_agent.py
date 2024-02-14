@@ -61,16 +61,17 @@ class InstinctAgent(QAgent):
         score: float = 0.0,
         done: bool = False,
         save_path: Optional[str] = None,
-    ) -> None:
+    ) -> list:
         """
         Takes observations and updates trainer on perceived experiences.
         Needed here to catch instincts.
 
         Args:
+            env: Environment
             observation: ObservationArray
             score: Only baseline uses score as a reward
             done: boolean whether run is done
-
+            save_path: str
         Returns:
             Reward: float
         """
@@ -129,11 +130,11 @@ class InstinctAgent(QAgent):
                     ]
                 )
 
-        self.trainer.update_memory(
-            self.id, self.state, self.last_action, score, done, next_state
-        )
+        event = [self.id, self.state, self.last_action, score, done, next_state]
+        self.trainer.update_memory(*event)
         self.state = next_state
-        return reward
+
+        return event
 
     def init_instincts(self) -> None:
         logger.debug(f"target_instincts: {self.target_instincts}")

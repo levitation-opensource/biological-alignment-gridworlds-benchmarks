@@ -2,8 +2,13 @@ from abc import ABC, abstractmethod
 from typing import Mapping, Optional, Type, Union
 
 import gymnasium as gym
-import pandas as pd
+
 from pettingzoo import AECEnv, ParallelEnv
+import numpy.typing as npt
+from aintelope.environments.typing import (
+    ObservationFloat,
+)
+import pandas as pd
 
 PettingZooEnv = Union[AECEnv, ParallelEnv]
 Environment = Union[gym.Env, PettingZooEnv]
@@ -19,7 +24,14 @@ class Agent(ABC):
         ...
 
     @abstractmethod
-    def get_history() -> pd.DataFrame:
+    def update(
+        self,
+        env: Environment,
+        observation: npt.NDArray[ObservationFloat],
+        score: float,
+        done: bool,
+        save_path: Optional[str],
+    ) -> list:
         ...
 
 
