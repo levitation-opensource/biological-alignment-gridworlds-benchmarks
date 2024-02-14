@@ -79,6 +79,7 @@ class InstinctAgent(QAgent):
             Reward: float
         """
         next_state = observation
+        next_info = info
         # For future: add state (interoception) handling here when needed
 
         # interrupt to do instinctual learning
@@ -95,9 +96,7 @@ class InstinctAgent(QAgent):
                     (
                         instinct_reward,
                         instinct_event,
-                    ) = instinct_object.calc_reward(  # TODO: [3D observation, interoception] handling
-                        next_state
-                    )
+                    ) = instinct_object.calc_reward(self, next_state, next_info)
                     reward += instinct_reward
                     logger.debug(
                         f"Reward of {instinct_name}: {instinct_reward}; "

@@ -12,15 +12,15 @@ class Smell:
     def reset(self):
         pass
 
-    def calc_reward(self, state):
+    def calc_reward(self, agent, state, info):
         """function of smell intensity for food"""
         agent_pos = get_agent_pos_from_state(
-            state[0]
+            state[0], info, agent.id
         )  # TODO: this works only with old AIntelope 1D observation
         min_grass_distance = distance_to_closest_item(
             agent_pos,
             np.array(
-                get_grass_pos_from_state(state[0])
+                get_grass_pos_from_state(state[0], info)
             ),  # TODO: this works only with old AIntelope 1D observation
         )
         event_signal = 0
@@ -38,12 +38,12 @@ class Hunger:
         self.max_hunger_reward = self.instinct_params.get("max_hunger_reward", 3.0)
         self.last_ate = self.instinct_params.get("last_ate", -10)
 
-    def calc_reward(self, agent, state):
+    def calc_reward(self, agent, state, info):
         """function of time since last ate and hunger rate and opportunity to eat"""
         current_step = agent.env.num_moves
-        agent_pos = get_agent_pos_from_state(state)
+        agent_pos = get_agent_pos_from_state(state[0], info, agent.id)
         min_grass_distance = distance_to_closest_item(
-            agent_pos, agent.env.grass_patches
+            agent_pos, agent.env.grass_patches  # TODO: 3D observation support
         )
         event_signal = 0
         if min_grass_distance <= 2.1:
@@ -69,14 +69,16 @@ class Thirst:
         self.max_thirst_reward = self.instinct_params.get("max_thirst_reward", 4.0)
         self.last_drank = self.instinct_params.get("last_drank", 0)
 
-    def calc_reward(self, agent, state):
+    def calc_reward(self, agent, state, info):
         """function of time since last ate and thirst rate and opportunity to eat"""
         current_step = agent.env.num_moves
         agent_pos = [
             state[0][1],
             state[0][2],
         ]  # TODO: this works only with old AIntelope 1D observation
-        min_water_distance = distance_to_closest_item(agent_pos, agent.env.water_holes)
+        min_water_distance = distance_to_closest_item(
+            agent_pos, agent.env.water_holes
+        )  # TODO: 3D observation support
 
         event_signal = 0
         if min_water_distance <= 1.1:
@@ -104,7 +106,7 @@ class Curiosity:
         self.curiosity_window = self.instinct_params.get("curiosity_window", 20)
         self.last_discovery = self.instinct_params.get("last_discovery", 0)
 
-    def calc_reward(self, agent, state):
+    def calc_reward(self, agent, state, info):
         """prefer not to revist tiles within curiosity window
         if agent had a sight-range, I'd add a preference to see new areas and objects
         could make this proportional to the nearest point in some sort of shifted

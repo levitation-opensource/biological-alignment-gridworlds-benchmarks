@@ -23,6 +23,15 @@ from aintelope.environments.typing import (
 from aintelope.environments.env_utils.render_ascii import AsciiRenderState
 from aintelope.environments.env_utils.distance import distance_to_closest_item
 
+from aintelope.environments.savanna_safetygrid import (
+    INFO_AGENT_OBSERVATION_LAYERS_ORDER,
+    INFO_AGENT_OBSERVATION_COORDINATES,
+    FOOD_CHR,
+    AGENT_CHR1,
+    AGENT_CHR2,
+)
+
+
 logger = logging.getLogger("aintelope.environments.savanna")
 
 
@@ -126,12 +135,43 @@ def move_agent(
 # These methods are temporary, and will not scale for more agents nor more grasses
 # they are for instincts, and should be rewritten such that state (observation)
 # contains the information necessary for instincts (and distinction for models)
-def get_grass_pos_from_state(agent_state) -> List[PositionFloat]:
-    return [agent_state[2], agent_state[3]]
+def get_grass_pos_from_state(agent_state, info) -> List[PositionFloat]:
+    if len(agent_state.shape) == 3:  # new obseration format
+        if (
+            False
+        ):  # enable if you want to use raw 3D observation and no coordinates in info
+            grass_layer_index = info[INFO_AGENT_OBSERVATION_LAYERS_ORDER].index(
+                FOOD_CHR
+            )
+            grass_layer = agent_state[grass_layer_index]
+            (row_indices, col_indices) = np.where(grass_layer)
+            coordinates = list(zip(row_indices, col_indices))
+            return np.array(coordinates)
+        else:
+            coordinates = info[INFO_AGENT_OBSERVATION_COORDINATES][FOOD_CHR]
+            return np.array(coordinates)
+    else:
+        return [agent_state[2], agent_state[3]]
 
 
-def get_agent_pos_from_state(agent_state) -> List[PositionFloat]:
-    return [agent_state[0], agent_state[1]]
+def get_agent_pos_from_state(agent_state, info, agent_name) -> List[PositionFloat]:
+    if len(agent_state.shape) == 3:  # new obseration format
+        agent_chr = agent_name[-1]  # TODO: use env.agent_name_mapping instead
+        if (
+            False
+        ):  # enable if you want to use raw 3D observation and no coordinates in info
+            grass_layer_index = info[INFO_AGENT_OBSERVATION_LAYERS_ORDER].index(
+                agent_chr
+            )
+            grass_layer = agent_state[grass_layer_index]
+            (row_indices, col_indices) = np.where(grass_layer)
+            coordinates = list(zip(row_indices, col_indices))
+            return list(coordinates[0])
+        else:
+            coordinates = info[INFO_AGENT_OBSERVATION_COORDINATES][agent_chr]
+            return list(coordinates[0])
+    else:
+        return [agent_state[0], agent_state[1]]
 
 
 class SavannaEnv:
