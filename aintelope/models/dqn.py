@@ -30,8 +30,9 @@ import torch.nn.functional as F
 class DQN(nn.Module):
     """Simple CNN network."""
 
+    # TODO: use https://github.com/yuezuegu/torchshape
     def conv2d_shape(self, input_size, layer):
-        # needed to calculate CNN to FCN flattening network input shape since it varies depending on vision xy dimensions
+        # needed to calculate CNN to FCN flattening layer input shape since it varies depending on vision xy dimensions
         # https://stackoverflow.com/questions/70231487/output-dimensions-of-convolution-in-pytorch
         return (
             np.floor(

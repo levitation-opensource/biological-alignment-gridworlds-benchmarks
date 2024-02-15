@@ -34,7 +34,7 @@ from ai_safety_gridworlds.environments.aintelope.aintelope_savanna import (
     GAME_ART,
     AGENT_CHR1,
     AGENT_CHR2,
-    AGENT_CHR3,
+    # AGENT_CHR3,
     DRINK_CHR,
     FOOD_CHR,
 )
