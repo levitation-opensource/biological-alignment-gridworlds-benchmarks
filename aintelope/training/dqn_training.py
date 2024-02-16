@@ -19,7 +19,6 @@ Transition = namedtuple(
 )
 
 
-
 def load_checkpoint(path, obs_size, action_space_size, unit_test_mode):
     """
     https://pytorch.org/tutorials/recipes/recipes/saving_and_loading_a_general_checkpoint.html
@@ -37,13 +36,15 @@ def load_checkpoint(path, obs_size, action_space_size, unit_test_mode):
     model = DQN(obs_size, action_space_size, unit_test_mode=unit_test_mode)
     # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
-    checkpoint = torch.load(path)
-    model.load_state_dict(checkpoint["model_state_dict"])
-    # optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-    # epoch = checkpoint['epoch']
-    # loss = checkpoint['loss']
+    if not unit_test_mode:
+        checkpoint = torch.load(path)
+        model.load_state_dict(checkpoint["model_state_dict"])
+        # optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        # epoch = checkpoint['epoch']
+        # loss = checkpoint['loss']
 
-    model.eval()
+        model.eval()
+
     return model
 
 
