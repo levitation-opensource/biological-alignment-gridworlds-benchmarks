@@ -37,13 +37,22 @@ hparams:
   env_params:
     env_experiment: "experiments.aintelope.food_unbounded"
     num_iters: 200 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
-    map_min: 0
-    map_max: 5
+    map_min: 0      # unused for new environments, is always 0
+    map_max: 10     # inclusive max, map resizing is not yet implemented for new environments, but can be added later if needed
     render_mode: null
-    render_map_max: 5
+    # render_map_max: 5     # this field is currently not used anywhere in code
+    render_agent_radius: 5
+
     amount_agents: 1  
-    # amount_grass_patches: 1
-    # amount_water_holes: 0
+    amount_grass_patches: 2
+    amount_water_holes: 0
+    amount_danger_tiles: 5
+    amount_predators: 0
+    enable_homeostasis: False
+    sustainability_challenge: False
+    amount_gold_deposits: 0
+    amount_silver_deposits: 0
+
     test_death: False      # needed for trainer tests
     seed: null      # needed for trainer tests
   agent_params:

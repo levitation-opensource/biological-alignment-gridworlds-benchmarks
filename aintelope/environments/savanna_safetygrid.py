@@ -73,11 +73,19 @@ class GridworldZooBaseEnv:
         # "render_grass_color": (20, 200, 0),
         # "render_modes": ("human", "ascii", "offline"),
         # "render_window_size": 512,
-        # "amount_agents": 1,
         # "map_min": 0,
         # "map_max": 10,   # TODO
-        # "amount_grass_patches": 2,
-        # "amount_water_holes": 0,
+        #
+        "amount_agents": 1,
+        "amount_grass_patches": 2,
+        "amount_water_holes": 0,
+        "amount_danger_tiles": 0,
+        "amount_predators": 0,
+        "enable_homeostasis": False,
+        "sustainability_challenge": False,
+        "amount_gold_deposits": 0,
+        "amount_silver_deposits": 0,
+        #
         "num_iters": 1,
         # TODO: Joel wanted to use relative direction, so need to use mode 1 or 2 in
         # this case  # 0 - fixed, 1 - relative, depending on last move, 2 - relative,
@@ -126,9 +134,17 @@ class GridworldZooBaseEnv:
             # during the game play.
             "seed": self.metadata["seed"],
             "max_iterations": self.metadata["num_iters"],
-            # "amount_food_patches": self.metadata["amount_grass_patches"],
-            # "amount_drink_holes": self.metadata["amount_water_holes"],
-            # "amount_agents": self.metadata["amount_agents"],
+            #
+            "amount_agents": self.metadata["amount_agents"],
+            "amount_food_patches": self.metadata["amount_grass_patches"],
+            "amount_drink_holes": self.metadata["amount_water_holes"],
+            "amount_water_tiles": self.metadata["amount_danger_tiles"],
+            "amount_predators": self.metadata["amount_predators"],
+            "penalise_oversatiation": self.metadata["enable_homeostasis"],
+            "sustainability_challenge": self.metadata["sustainability_challenge"],
+            "amount_gold_deposits": self.metadata["amount_gold_deposits"],
+            "amount_silver_deposits": self.metadata["amount_silver_deposits"],
+            #
             # TODO: is render_agent_radius meant as diameter actually?
             "observation_radius": self.metadata["render_agent_radius"],
             # 0 - fixed, 1 - relative, depending on last move, 2 - relative,
