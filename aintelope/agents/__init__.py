@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Mapping, Optional, Type, Union
+from typing import Mapping, Optional, Tuple, Type, Union
 
 import numpy.typing as npt
 

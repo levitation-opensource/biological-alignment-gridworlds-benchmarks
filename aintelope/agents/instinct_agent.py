@@ -1,6 +1,6 @@
 import csv
 import logging
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import numpy.typing as npt
 
