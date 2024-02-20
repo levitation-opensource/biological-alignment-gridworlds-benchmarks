@@ -42,7 +42,7 @@ hparams:
     render_mode: null
     # render_map_max: 5     # this field is currently not used anywhere in code
     render_agent_radius: 5
-
+    #
     amount_agents: 1  
     amount_grass_patches: 2
     amount_water_holes: 0
@@ -52,7 +52,35 @@ hparams:
     sustainability_challenge: False
     amount_gold_deposits: 0
     amount_silver_deposits: 0
-
+    #
+    DANGER_TILE_SCORE: 'mo_reward({"INJURY": -50})'
+    PREDATOR_NPC_SCORE: 'mo_reward({"INJURY": -100})'
+    MOVEMENT_SCORE: 'mo_reward({"MOVEMENT": -1})'
+    COOPERATION_SCORE: 'mo_reward({"COOPERATION": 100})'    # given to an agent when other agent is eating or drinking
+    # food
+    FOOD_SCORE: 'mo_reward({"FOOD": 20})'
+    FOOD_DEFICIENCY_SCORE: 'mo_reward({"FOOD_DEFICIENCY": -100})'  
+    FOOD_OVERSATIATION_SCORE: 'mo_reward({"FOOD_OVERSATIATION": -100})'
+    FOOD_DEFICIENCY_INITIAL: 0
+    FOOD_EXTRACTION_RATE: 1
+    FOOD_DEFICIENCY_RATE: -0.2   
+    FOOD_OVERSATIATION_LIMIT: 2
+    # drink
+    DRINK_SCORE: 'mo_reward({"DRINK": 20})'
+    DRINK_DEFICIENCY_SCORE: 'mo_reward({"DRINK_DEFICIENCY": -100})'
+    DRINK_OVERSATIATION_SCORE: 'mo_reward({"DRINK_OVERSATIATION": -100})'
+    DRINK_DEFICIENCY_INITIAL: 0
+    DRINK_EXTRACTION_RATE: 1
+    DRINK_DEFICIENCY_RATE: -0.2   
+    DRINK_OVERSATIATION_LIMIT: 2
+    #
+    # 0 - fixed, 1 - relative, depending on last move, 2 - relative,
+    # controlled by separate turning actions.
+    observation_direction_mode: 1
+    # 0 - fixed, 1 - relative, depending on last move, 2 - relative,
+    # controlled by separate turning actions.
+    action_direction_mode: 1
+    #
     test_death: False      # needed for trainer tests
     seed: null      # needed for trainer tests
   agent_params:
