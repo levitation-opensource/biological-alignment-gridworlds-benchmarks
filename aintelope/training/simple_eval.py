@@ -4,44 +4,15 @@ from typing import Dict
 
 from omegaconf import DictConfig, OmegaConf
 
-import gymnasium as gym
-from aintelope.agents.instinct_agent import InstinctAgent
-from aintelope.agents.q_agent import QAgent
-from aintelope.agents.simple_agents import (
-    IterativeWeightOptimizationAgent,
-    OneStepPerfectPredictionAgent,
-    RandomWalkAgent,
-)
-from aintelope.environments.savanna_safetygrid import (
-    SavannaGridworldParallelEnv,
-    SavannaGridworldSequentialEnv,
-)
-from aintelope.environments.savanna_zoo import (
-    SavannaZooParallelEnv,
-    SavannaZooSequentialEnv,
-)
+
+from aintelope.agents import get_agent_class
+from aintelope.environments import get_env_class
 from aintelope.models.dqn import DQN
 from aintelope.training.dqn_training import Trainer
 from pettingzoo import AECEnv, ParallelEnv
 
 logger = logging.getLogger("aintelope.training.simple_eval")
 
-# TODO: use registration instead?
-AGENT_LOOKUP = {
-    "q_agent": QAgent,
-    "instinct_agent": InstinctAgent,
-    "random_walk_agent": RandomWalkAgent,
-    "one_step_perfect_prediction_agent": OneStepPerfectPredictionAgent,
-    "iterative_weight_optimization_agent": IterativeWeightOptimizationAgent,
-}
-
-# TODO: use registration instead?
-ENV_LOOKUP = {
-    "savanna-zoo-parallel-v2": SavannaZooParallelEnv,
-    "savanna-zoo-sequential-v2": SavannaZooSequentialEnv,
-    "savanna-safetygrid-parallel-v1": SavannaGridworldParallelEnv,
-    "savanna-safetygrid-sequential-v1": SavannaGridworldSequentialEnv,
-}
 
 MODEL_LOOKUP = {"dqn": DQN}
 
@@ -65,7 +36,7 @@ def run_episode(full_params: Dict) -> None:
     # environment with num_envs copies of the environment.
 
     if env_type == "zoo":
-        env = ENV_LOOKUP[hparams["env"]](env_params=env_params)
+        env = get_env_class(hparams["env"])(env_params=env_params)
         # if hparams.get('sequential_env', False) is True:
         #     logger.info('converting to sequential from parallel')
         #     env = parallel_to_aec(env)
@@ -134,7 +105,7 @@ def run_episode(full_params: Dict) -> None:
         # What is the intention of using multiple agent_specs?
         agents = [
             [
-                AGENT_LOOKUP[agent](
+                get_agent_class(agent)(
                     agent_id=f"agent_{i}",
                     trainer=trainer,
                     target_instincts=[],
@@ -145,7 +116,7 @@ def run_episode(full_params: Dict) -> None:
         ]
     else:
         agents = [
-            AGENT_LOOKUP[agent_spec](
+            get_agent_class(agent_spec)(
                 agent_id=f"agent_{i}",
                 trainer=trainer,
                 target_instincts=[],
