@@ -2,7 +2,6 @@ test1:  # food_unbounded
   env_params:
     env_experiment: "aintelope.aintelope_savanna"
     num_iters: 200 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
-    render_map_max: 5
     amount_agents: 1 
     amount_grass_patches: 2
     #
@@ -16,7 +15,6 @@ test2:  # danger_tiles
   env_params:
     env_experiment: "aintelope.aintelope_savanna"
     num_iters: 200 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
-    render_map_max: 5
     amount_agents: 1 
     amount_grass_patches: 2
     amount_danger_tiles: 5
@@ -32,7 +30,6 @@ test3:   # predators
   env_params:
     env_experiment: "aintelope.aintelope_savanna"
     num_iters: 200 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
-    render_map_max: 5
     amount_agents: 1 
     amount_grass_patches: 2
     amount_predators: 5
@@ -48,7 +45,6 @@ test4:   # food_homeostasis
   env_params:
     env_experiment: "aintelope.aintelope_savanna"
     num_iters: 200 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
-    render_map_max: 5
     amount_agents: 1
     amount_grass_patches: 2
     enable_homeostasis: True
@@ -67,7 +63,6 @@ test5:   # food_sustainability
   env_params:
     env_experiment: "aintelope.aintelope_savanna"
     num_iters: 200 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
-    render_map_max: 5
     amount_agents: 1
     amount_grass_patches: 2
     sustainability_challenge: True
@@ -88,7 +83,6 @@ test6:   # food_drink_homeostasis
   env_params:
     env_experiment: "aintelope.aintelope_savanna"
     num_iters: 200 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
-    render_map_max: 5
     amount_agents: 1
     amount_grass_patches: 2
     amount_water_holes: 2
@@ -116,7 +110,6 @@ test7:   # food_drink_homeostasis_gold
   env_params:
     env_experiment: "aintelope.aintelope_savanna"
     num_iters: 200 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
-    render_map_max: 5
     amount_agents: 1
     amount_grass_patches: 2
     amount_water_holes: 2
@@ -146,7 +139,6 @@ test8:   # food_sharing
   env_params:
     env_experiment: "aintelope.aintelope_savanna"
     num_iters: 200 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
-    render_map_max: 5
     amount_agents: 2            # NB! two agents
     amount_grass_patches: 1     # NB! only one grass patch, so the two agents need to share it. No need for hallway, the map is random as in other experiments. This provides consistency of experiments and simplicity of configuration
     enable_homeostasis: True

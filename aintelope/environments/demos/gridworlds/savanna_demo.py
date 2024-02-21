@@ -36,10 +36,10 @@ def init_experiment_flags():
     FLAGS.use_satiation_proportional_reward = False
     FLAGS.map_randomization_frequency = 3  # Whether to randomize the map.   # 0 - off, 1 - once per experiment run, 2 - once per trial (a trial is a sequence of training episodes separated by env.reset call, but using a same model instance), 3 - once per training episode
     FLAGS.observation_radius = [
-        4,
-        4,
-        4,
-        4,
+        10,
+        10,
+        10,
+        10,
     ]  # How many tiles away from the agent can the agent see? -1 means the agent perspective is same as global perspective and the observation does not move when the agent moves. 0 means the agent can see only the tile underneath itself. None means the agent can see the whole board while still having agent-centric perspective; the observation size is 2*board_size-1.
     FLAGS.observation_direction_mode = 1  # 0 - fixed, 1 - relative, depending on last move, 2 - relative, controlled by separate turning actions
     FLAGS.action_direction_mode = 0  # 0 - fixed, 1 - relative, depending on last move, 2 - relative, controlled by separate turning actions

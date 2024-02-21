@@ -16,12 +16,6 @@ trainer_params:
 hparams:
   batch_size: 16
   lr: 0.001
-  #env: savanna-zoo-parallel-v2
-  #env_entry_point: "aintelope.environments.savanna_zoo:SavannaZooParallelEnv"
-  #env_type: zoo
-  #env: savanna-zoo-sequential-v2
-  #env_entry_point: "aintelope.environments.savanna_zoo:SavannaZooSequentialEnv"
-  #env_type: zoo
   env: savanna-safetygrid-parallel-v1
   env_entry_point: "aintelope.environments.savanna_safetygrid:SavannaGridworldParallelEnv"
   env_type: zoo  
@@ -50,7 +44,7 @@ hparams:
     map_max: 10     # inclusive max, map resizing is not yet implemented for new environments, but can be added later if needed
     render_mode: null
     # render_map_max: 5     # this field is currently not used anywhere in code
-    render_agent_radius: 5
+    render_agent_radius: 10     # make whole map visible while still agent-centric
     #
     amount_agents: 1  
     amount_grass_patches: 2

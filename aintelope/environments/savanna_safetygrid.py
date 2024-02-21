@@ -67,7 +67,7 @@ class GridworldZooBaseEnv:
         "seed": None,
         # "name": "savanna-safetygrid-v1",
         # "render_fps": 3,
-        "render_agent_radius": 5,
+        "render_agent_radius": 10,
         # "render_modes": ("human", "ascii", "offline"),
         # "map_min": 0,
         # "map_max": 10,   # TODO
