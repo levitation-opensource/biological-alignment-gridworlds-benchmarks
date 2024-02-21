@@ -1,14 +1,12 @@
-import csv
 import logging
 from typing import List, NamedTuple, Optional, Tuple
 
 import numpy.typing as npt
 
-from aintelope.agents import Agent, register_agent_class
-from aintelope.environments.savanna_gym import SavannaGymEnv  # TODO used for hack
-from aintelope.environments.typing import ObservationFloat
+from aintelope.agents import Agent
+from aintelope.environments.savanna_gym import SavannaGymEnv
 from aintelope.training.dqn_training import Trainer
-from gymnasium.spaces import Discrete
+from aintelope.typing import ObservationFloat
 
 logger = logging.getLogger("aintelope.agents.q_agent")
 
@@ -127,6 +125,3 @@ class QAgent(Agent):
         self.state = next_state
         self.info = info
         return event
-
-
-register_agent_class("q_agent", QAgent)

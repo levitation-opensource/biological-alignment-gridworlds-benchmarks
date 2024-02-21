@@ -1,46 +1,12 @@
-from abc import ABC, abstractmethod
-from typing import Mapping, Optional, Tuple, Type, Union
-
-import numpy.typing as npt
-
-import gymnasium as gym
-from aintelope.environments.typing import ObservationFloat
-from pettingzoo import AECEnv, ParallelEnv
-
-PettingZooEnv = Union[AECEnv, ParallelEnv]
-Environment = Union[gym.Env, PettingZooEnv]
-
-
-class Agent(ABC):
-    @abstractmethod
-    def reset(self, state, info) -> None:
-        ...
-
-    @abstractmethod
-    def get_action(
-        self,
-        observation: Tuple[
-            npt.NDArray[ObservationFloat], npt.NDArray[ObservationFloat]
-        ] = None,
-        info: dict = {},
-        step: int = 0,  # net: nn.Module, epsilon: float, device: str
-    ) -> Optional[int]:
-        ...
-
-    @abstractmethod
-    def update(
-        self,
-        env: PettingZooEnv = None,
-        observation: Tuple[
-            npt.NDArray[ObservationFloat], npt.NDArray[ObservationFloat]
-        ] = None,
-        info: dict = {},
-        score: float = 0.0,
-        done: bool = False,
-        save_path: Optional[str] = None,
-    ) -> list:
-        ...
-
+from typing import Mapping, Type
+from aintelope.agents.abstract_agent import Agent
+from aintelope.agents.instinct_agent import InstinctAgent
+from aintelope.agents.q_agent import QAgent
+from aintelope.agents.simple_agents import (
+    IterativeWeightOptimizationAgent,
+    OneStepPerfectPredictionAgent,
+    RandomWalkAgent,
+)
 
 AGENT_REGISTRY: Mapping[str, Type[Agent]] = {}
 
@@ -55,3 +21,13 @@ def get_agent_class(agent_id: str) -> Type[Agent]:
     if agent_id not in AGENT_REGISTRY:
         raise ValueError(f"{agent_id} is not found in agent registry")
     return AGENT_REGISTRY[agent_id]
+
+
+# add agent class to registry
+register_agent_class("random_walk_agent", RandomWalkAgent)
+register_agent_class("one_step_perfect_prediction_agent", OneStepPerfectPredictionAgent)
+register_agent_class(
+    "iterative_weight_optimization_agent", IterativeWeightOptimizationAgent
+)
+register_agent_class("q_agent", QAgent)
+register_agent_class("instinct_agent", InstinctAgent)

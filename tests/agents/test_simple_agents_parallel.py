@@ -1,10 +1,9 @@
 import os
-import sys
-from typing import Dict, Tuple
+from typing import Dict
 
 import numpy as np
 import pytest
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import OmegaConf
 
 from aintelope.training.simple_eval import run_episode
 from tests.conftest import root_dir, tparams_hparams

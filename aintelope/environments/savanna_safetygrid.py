@@ -14,7 +14,6 @@ from ai_safety_gridworlds.environments.aintelope.aintelope_savanna import (  # T
     GAME_ART,
 )
 
-# from ai_safety_gridworlds.environments.shared.mo_reward import mo_reward
 from ai_safety_gridworlds.helpers.gridworld_zoo_aec_env import GridworldZooAecEnv
 from ai_safety_gridworlds.helpers.gridworld_zoo_parallel_env import (
     INFO_AGENT_OBSERVATION_COORDINATES,
@@ -29,10 +28,10 @@ from ai_safety_gridworlds.helpers.gridworld_zoo_parallel_env import (
     Actions,
     GridworldZooParallelEnv,
 )
-from aintelope.environments import register_env_class
+
 from aintelope.environments.env_utils.distance import distance_to_closest_item
-from aintelope.environments.typing import Reward  # TODO: use np.ndarray or mo_reward
-from aintelope.environments.typing import (  # PositionFloat,; Action,; AgentStates,
+from aintelope.typing import Reward  # TODO: use np.ndarray or mo_reward
+from aintelope.typing import (  # PositionFloat,; Action,; AgentStates,
     AgentId,
     Info,
     Observation,
@@ -43,7 +42,6 @@ from pettingzoo import AECEnv, ParallelEnv
 
 INFO_AGENT_INTEROCEPTION_ORDER = "info_agent_interoception_order"
 INFO_AGENT_INTEROCEPTION_VECTOR = "info_agent_interoception_vector"
-
 
 logger = logging.getLogger("aintelope.environments.savanna_safetygrid")
 
@@ -1068,7 +1066,3 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
             truncateds,
             self.filter_infos(infos),
         )
-
-
-register_env_class("savanna-safetygrid-sequential-v1", SavannaGridworldSequentialEnv)
-register_env_class("savanna-safetygrid-parallel-v1", SavannaGridworldParallelEnv)

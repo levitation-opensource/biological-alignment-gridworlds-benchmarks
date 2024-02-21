@@ -3,7 +3,7 @@ from typing import Dict, Optional
 
 import gymnasium as gym
 from aintelope.environments.savanna import SavannaEnv
-from aintelope.environments.typing import Info, Observation, Reward
+from aintelope.typing import Info, Observation, Reward
 
 Step = tuple[Observation, Reward, bool, bool, Info]
 
