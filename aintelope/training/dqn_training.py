@@ -78,7 +78,6 @@ class Trainer:
         observation_shape,
         action_space,
         unit_test_mode: bool,
-        hidden_sizes: list,
         checkpoint: Optional[str] = None,
     ):
         """
@@ -95,30 +94,31 @@ class Trainer:
         """
         self.observation_shapes[agent_id] = observation_shape
         self.action_spaces[agent_id] = action_space(agent_id)
-        self.replay_memories[agent_id] = ReplayMemory(self.hparams.replay_size)
+        self.replay_memories[agent_id] = ReplayMemory(
+            self.hparams.model_params.replay_size
+        )
 
         if not checkpoint:
             self.policy_nets[agent_id] = DQN(
                 self.observation_shapes[agent_id],
                 self.action_spaces[agent_id].n,
                 unit_test_mode=unit_test_mode,
-                hidden_sizes=hidden_sizes,
+                hidden_sizes=self.hparams.model_params.hidden_sizes,
             ).to(self.device)
         else:
-            print("Loading from checkpoint...")
             self.policy_nets[agent_id] = load_checkpoint(
                 checkpoint,
                 self.observation_shapes[agent_id],
                 self.action_spaces[agent_id].n,
                 unit_test_mode=unit_test_mode,
-                hidden_sizes=hidden_sizes,
+                hidden_sizes=self.hparams.model_params.hidden_sizes,
             ).to(self.device)
 
         self.target_nets[agent_id] = DQN(
             self.observation_shapes[agent_id],
             self.action_spaces[agent_id].n,
             unit_test_mode=unit_test_mode,
-            hidden_sizes=hidden_sizes,
+            hidden_sizes=self.hparams.model_params.hidden_sizes,
         ).to(self.device)
         self.target_nets[agent_id].load_state_dict(
             self.policy_nets[agent_id].state_dict()
@@ -152,8 +152,9 @@ class Trainer:
         """
         if step > 0:
             epsilon = max(
-                self.hparams.eps_end,
-                self.hparams.eps_start - step * 1 / self.hparams.eps_last_frame,
+                self.hparams.model_params.eps_end,
+                self.hparams.model_params.eps_start
+                - step * 1 / self.hparams.model_params.eps_last_frame,
             )
         else:
             epsilon = 0.0
@@ -287,7 +288,7 @@ class Trainer:
                 ).max(1)[0]
 
             expected_state_action_values = (
-                next_state_values * self.hparams.gamma
+                next_state_values * self.hparams.model_params.gamma
             ) + reward_batch
 
             criterion = nn.SmoothL1Loss()
@@ -307,8 +308,8 @@ class Trainer:
             for key in policy_net_state_dict:
                 target_net_state_dict[key] = policy_net_state_dict[
                     key
-                ] * self.hparams.tau + target_net_state_dict[key] * (
-                    1 - self.hparams.tau
+                ] * self.hparams.model_params.tau + target_net_state_dict[key] * (
+                    1 - self.hparams.model_params.tau
                 )
             target_net.load_state_dict(target_net_state_dict)
 

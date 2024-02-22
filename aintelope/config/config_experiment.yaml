@@ -25,21 +25,19 @@ hparams:
   model: dqn
   unit_test_mode: False      # is set during tests in order to speed up DQN computations
   agent_id: q_agent
-  gamma: 0.99
-  sync_rate: 10
-  replay_size: 99
-  eps_last_frame: 50
-  eps_start: 1.0
-  eps_end: 0.01
-  tau: 0.05
-  num_episodes: 10 # how long to train. TODO move num_iters onto same level as this
-  episode_length: 1010     # TODO: this parameter seems to be unused
+  num_episodes: 10 # how long to train.
   warm_start_steps: 100
-  log_figures_every_n_epochs: 5
-  every_n_episodes: 1 # how often save a model. TODO rename to save_frequency
+  save_frequency: 1 # how often save a model
+  agent_params:
+    target_instincts: []
   model_params:
     hidden_sizes: [16,16]
-    #TODO: add the rest of model specific params here from above
+    gamma: 0.99
+    tau: 0.05
+    eps_last_frame: 50
+    eps_start: 1.0
+    eps_end: 0.01
+    replay_size: 99
   env_params:
     env_experiment: aintelope.aintelope_savanna
     num_iters: 200 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
@@ -89,8 +87,6 @@ hparams:
     #
     test_death: False      # needed for trainer tests
     seed: null      # needed for trainer tests
-  agent_params:
-    target_instincts: []
 
 hydra:
   run:

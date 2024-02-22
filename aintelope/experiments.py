@@ -76,7 +76,6 @@ def run_experiment(cfg: DictConfig) -> None:
             (observation[0].shape, observation[1].shape),
             env.action_space,
             unit_test_mode=unit_test_mode,
-            hidden_sizes=cfg.hparams.model_params.hidden_sizes,
             checkpoint=checkpoint,
         )
         dones[agent_id] = False
@@ -252,7 +251,7 @@ def run_experiment(cfg: DictConfig) -> None:
         # Save models
         # https://pytorch.org/tutorials/recipes/recipes/
         # saving_and_loading_a_general_checkpoint.html
-        if i_episode % cfg.hparams.every_n_episodes == 0:
+        if i_episode % cfg.hparams.save_frequency == 0:
             os.makedirs(dir_cp, exist_ok=True)
             trainer.save_models(i_episode, dir_cp)
 
