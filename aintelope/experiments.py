@@ -98,7 +98,7 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
             "Next_state",
         ]
         + score_dimensions
-    )  # TODO: replace this with env.score_titles    # TODO: multidimensional and multi-agent score handling
+    )
 
     for i_episode in range(cfg.hparams.num_episodes):
         # Reset
@@ -151,19 +151,17 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
                         env,
                         observation,
                         info,
-                        score,  # TODO: make a function to handle obs->rew in Q-agent too, remove this
+                        sum(
+                            score.values()
+                        ),  # TODO: make a function to handle obs->rew in Q-agent too, remove this
                         done,  # TODO: should it be "terminated" in place of "done" here?
                         done,  # TODO: should it be "terminated" in place of "done" here?
                     )
 
-                    # Record what just happened
-                    env_step_info = [
-                        score
-                    ]  # TODO package the score info into a list    # TODO: multidimensional and multi-agent score handling
                     events.loc[len(events)] = (
                         [cfg.experiment_name, i_episode, step]
                         + agent_step_info
-                        + env_step_info
+                        + score.values()
                     )
 
             elif isinstance(env, AECEnv):
@@ -215,18 +213,15 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
                             env,
                             observation,
                             info,
-                            score,
+                            sum(score.values()),
                             done,  # TODO: should it be "terminated" in place of "done" here?
                         )  # note that score is used ONLY by baseline
 
                         # Record what just happened
-                        env_step_info = [
-                            score  # TODO: multidimensional and multi-agent score handling
-                        ]  # TODO package the score info into a list
                         events.loc[len(events)] = (
                             [cfg.experiment_name, i_episode, step]
                             + agent_step_info
-                            + env_step_info
+                            + score.values()
                         )
 
                         # NB! any agent could die at any other agent's step
