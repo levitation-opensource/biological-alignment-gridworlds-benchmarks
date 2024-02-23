@@ -97,9 +97,8 @@ def run_experiment(cfg: DictConfig) -> None:
             "Done",
             "Next_state",
         ]
-        + ["MOVEMENT"]  # TODO, temp for 1x1 test10, use below once that is ready
-        # cfg.hparams.env_params.scores TODO, when this is ready
-    )  # TODO: replace this with env.score_titles    # TODO: multidimensional and multi-agent score handling
+        + cfg.hparams.env_params.scores
+    )  
 
     for i_episode in range(cfg.hparams.num_episodes):
         # Reset
@@ -152,7 +151,7 @@ def run_experiment(cfg: DictConfig) -> None:
                         env,
                         observation,
                         info,
-                        score,  # TODO: make a function to handle obs->rew in Q-agent too, remove this
+                        sum(score.values()), # TODO: make a function to handle obs->rew in Q-agent too, remove this
                         done,  # TODO: should it be "terminated" in place of "done" here?
                         done,  # TODO: should it be "terminated" in place of "done" here?
                     )
@@ -212,7 +211,7 @@ def run_experiment(cfg: DictConfig) -> None:
                             env,
                             observation,
                             info,
-                            score,
+                            sum(score.values()),
                             done,  # TODO: should it be "terminated" in place of "done" here?
                         )  # note that score is used ONLY by baseline
 
