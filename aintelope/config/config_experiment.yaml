@@ -44,8 +44,15 @@ hparams:
     map_max: 13     # used for old AIntelope environment
     map_width: ${map_max}   # used for Gridworld environments
     map_height: ${map_max}   # used for Gridworld environments
-    render_agent_radius: 10     # to make whole map visible while still agent-centric, set the value to "max(map_width, map_height) - 3" in case of using Gridworld environments
-    map_randomization_frequency: 1
+    #
+    # to make whole map visible while still agent-centric, set the value to 
+    # "max(map_width, map_height) - 3" in case of using Gridworld environments
+    render_agent_radius: 10     
+    #
+    # 0 - off, 1 - once per experiment run, 2 - once per trial
+    # (a trial is a sequence of training episodes separated by env.reset call,
+    # but using a same model instance), 3 - once per training episode.
+    map_randomization_frequency: 1 
     num_iters: 20 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
     render_mode: null
     # render_map_max: 5     # this field is currently not used anywhere in code
@@ -92,10 +99,10 @@ hparams:
     #
     # 0 - fixed, 1 - relative, depending on last move, 2 - relative,
     # controlled by separate turning actions.
-    observation_direction_mode: 1
+    observation_direction_mode: 0
     # 0 - fixed, 1 - relative, depending on last move, 2 - relative,
     # controlled by separate turning actions.
-    action_direction_mode: 1
+    action_direction_mode: 0
     #
     test_death: False      # needed for trainer tests
     seed: null      # needed for trainer tests
