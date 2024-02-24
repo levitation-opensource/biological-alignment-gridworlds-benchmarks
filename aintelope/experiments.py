@@ -32,8 +32,10 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
     # Common trainer for each agent's models
     trainer = Trainer(cfg)
 
-    dir_out = f"{cfg.log_dir}"
-    dir_cp = dir_out + "checkpoints/"
+    # normalise slashes in paths. This is not mandatory, but will be cleaner to debug
+    dir_out = os.path.normpath(cfg.log_dir)
+    checkpoint_dir = os.path.normpath(cfg.checkpoint_dir)
+    dir_cp = os.path.join(dir_out, checkpoint_dir)
 
     unit_test_mode = (
         cfg.hparams.unit_test_mode
@@ -67,7 +69,7 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
         agents[-1].reset(observation, info)
         # Get latest checkpoint if existing
         checkpoint = None
-        checkpoints = glob.glob(dir_cp + agent_id + "*")
+        checkpoints = glob.glob(os.path.join(dir_cp, agent_id + "*"))
         if len(checkpoints) > 0:
             checkpoint = max(checkpoints, key=os.path.getctime)
         # Add agent, with potential checkpoint
@@ -100,6 +102,7 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
         + score_dimensions
     )
 
+    assert cfg.hparams.num_episodes > 0
     for i_episode in range(cfg.hparams.num_episodes):
         # Reset
         if isinstance(env, ParallelEnv):
@@ -151,9 +154,9 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
                         env,
                         observation,
                         info,
-                        sum(
-                            score.values()
-                        ),  # TODO: make a function to handle obs->rew in Q-agent too, remove this
+                        sum(score.values())
+                        if isinstance(score, dict)
+                        else score,  # TODO: make a function to handle obs->rew in Q-agent too, remove this
                         done,  # TODO: should it be "terminated" in place of "done" here?
                         done,  # TODO: should it be "terminated" in place of "done" here?
                     )
@@ -217,7 +220,7 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
                             env,
                             observation,
                             info,
-                            sum(score.values()),
+                            sum(score.values()) if isinstance(score, dict) else score,
                             done,  # TODO: should it be "terminated" in place of "done" here?
                         )  # note that score is used ONLY by baseline
 
@@ -253,12 +256,26 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
         # Save models
         # https://pytorch.org/tutorials/recipes/recipes/
         # saving_and_loading_a_general_checkpoint.html
+        last_episode_was_saved = False
         if i_episode % cfg.hparams.save_frequency == 0:
             os.makedirs(dir_cp, exist_ok=True)
             trainer.save_models(i_episode, dir_cp)
+            last_episode_was_saved = True
 
-    record_path = Path(f"{cfg.experiment_dir}" + f"{cfg.events_dir}")
-    rec.record_events(record_path, events)
+    if (
+        not last_episode_was_saved
+    ):  # happens when num_episodes is not divisible by save frequency
+        os.makedirs(dir_cp, exist_ok=True)
+        trainer.save_models(i_episode, dir_cp)
+
+    # normalise slashes in paths. This is not mandatory, but will be cleaner to debug
+    experiment_dir = os.path.normpath(cfg.experiment_dir)
+    events_dir = os.path.normpath(cfg.events_dir)
+
+    record_path = Path(os.path.join(experiment_dir, events_dir))
+    rec.record_events(  # the experiment_dir path is automatically created
+        record_path, events
+    )  # TODO: flush the events log every once a while and later append new rows
 
 
 # @hydra.main(version_base=None, config_path="config", config_name="config_experiment")

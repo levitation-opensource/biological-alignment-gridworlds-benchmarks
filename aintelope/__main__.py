@@ -1,13 +1,14 @@
+import copy
 import logging
+import os
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
-import copy
 
 from aintelope.analytics import plotting, recording
 from aintelope.config.config_utils import (
-    register_resolvers,
     get_pipeline_score_dimensions,
+    register_resolvers,
 )
 from aintelope.experiments import run_experiment
 
@@ -30,13 +31,17 @@ def aintelope_main(cfg: DictConfig) -> None:
         logger.info(OmegaConf.to_yaml(experiment_cfg))
         run_experiment(experiment_cfg, score_dimensions)
 
-    analytics(experiment_cfg)
+    analytics(experiment_cfg, score_dimensions)
 
 
-def analytics(cfg):
-    savepath = cfg.log_dir + "plot.png"
-    events = recording.read_events(cfg.log_dir, cfg.events_dir)
-    plotting.plot_performance(events, savepath)
+def analytics(cfg, score_dimensions):
+    # normalise slashes in paths. This is not mandatory, but will be cleaner to debug
+    log_dir = os.path.normpath(cfg.log_dir)
+    events_dir = os.path.normpath(cfg.events_dir)
+
+    savepath = os.path.join(log_dir, "plot.png")
+    events = recording.read_events(log_dir, events_dir)
+    plotting.plot_performance(events, score_dimensions, savepath)
 
 
 if __name__ == "__main__":
