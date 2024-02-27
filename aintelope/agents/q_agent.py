@@ -68,7 +68,7 @@ class QAgent(Agent):
         else:
             # For future: observation can go to instincts here
             action = self.trainer.get_action(
-                self.id, self.state, self.info, step, episode
+                self.id, observation, self.info, step, episode
             )
 
         self.last_action = action
