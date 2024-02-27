@@ -20,7 +20,6 @@ Transition = namedtuple(
 )
 
 
-
 def load_checkpoint(
     path, obs_size, action_space_size, unit_test_mode, hidden_sizes, num_conv_layers
 ):
