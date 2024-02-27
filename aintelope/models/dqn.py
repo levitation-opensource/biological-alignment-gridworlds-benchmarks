@@ -52,6 +52,7 @@ class DQN(nn.Module):
         n_actions: int,
         unit_test_mode: bool,
         hidden_sizes: list = [8, 8],
+        num_convolution_layers: int = 1,
     ):
         """
         Args:
@@ -61,6 +62,8 @@ class DQN(nn.Module):
         """
         super().__init__()
         self.unit_test_mode = unit_test_mode
+        self.num_convolution_layers = num_convolution_layers
+
         if (
             unit_test_mode
         ):  # constrain the size of networks during unit testing for performance purposes
@@ -83,30 +86,37 @@ class DQN(nn.Module):
         else:  # Gridworlds environment
             self.cnn = True
 
-            num_vision_features = vision_size[
-                0
-            ]  # feature vector is the first dimension
-            vision_xy = vision_size[1:]  # vision xy shape starts from index 1
+            if self.num_convolution_layers == 0:
+                output_size = vision_size
+                conv_output_hidden_size = 1
+            else:
+	            num_vision_features = vision_size[
+	                0
+	            ]  # feature vector is the first dimension
+	            vision_xy = vision_size[1:]  # vision xy shape starts from index 1
 
-            # 3D vision network
-            self.conv1 = nn.Conv2d(
-                num_vision_features, hidden_sizes[0], kernel_size=1, stride=1
-            )  # this layer with kernel_size=1 enables mixing of information across feature vector channels
-            output_size = self.conv2d_shape(vision_xy, self.conv1)
+	            # 3D vision network
+	            self.conv1 = nn.Conv2d(
+	                num_vision_features, hidden_sizes[0], kernel_size=1, stride=1
+	            )  # this layer with kernel_size=1 enables mixing of information across feature vector channels
+	            output_size = self.conv2d_shape(vision_xy, self.conv1)
 
-            if not unit_test_mode:
-                self.conv2 = nn.Conv2d(
-                    hidden_sizes[0], hidden_sizes[0], kernel_size=3, stride=1
-                )
-                output_size = self.conv2d_shape(output_size, self.conv2)
+	            if not unit_test_mode:
+	                self.conv2 = nn.Conv2d(
+	                    hidden_sizes[0], hidden_sizes[0], kernel_size=3, stride=1
+	                )
+	                output_size = self.conv2d_shape(output_size, self.conv2)
 
-                self.conv3 = nn.Conv2d(
-                    hidden_sizes[0], hidden_sizes[0], kernel_size=3, stride=1
-                )
-                output_size = self.conv2d_shape(output_size, self.conv3)
+	                self.conv3 = nn.Conv2d(
+	                    hidden_sizes[0], hidden_sizes[0], kernel_size=3, stride=1
+	                )
+	                output_size = self.conv2d_shape(output_size, self.conv3)
+					
+                conv_output_hidden_size = hidden_sizes[0]
+
 
             self.fc4 = nn.Linear(
-                np.prod(output_size) * hidden_sizes[0], hidden_sizes[1]
+                np.prod(output_size) * conv_output_hidden_size, hidden_sizes[1]
             )  # flattens convolutional layers output
 
             # interoception network
@@ -134,11 +144,12 @@ class DQN(nn.Module):
 
         else:  # Gridworlds environment
             # 3D vision network
-            x = F.relu(self.conv1(x))
+            if self.num_convolution_layers > 0:
+                x = F.relu(self.conv1(x))
 
-            if not self.unit_test_mode:
-                x = F.relu(self.conv2(x))
-                x = F.relu(self.conv3(x))
+	            if not self.unit_test_mode:
+	                x = F.relu(self.conv2(x))
+	                x = F.relu(self.conv3(x))
 
             x = x.view(
                 x.size(0), -1

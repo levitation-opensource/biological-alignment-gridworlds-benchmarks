@@ -136,7 +136,9 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
                 for agent in agents:  # TODO: exclude terminated agents
                     observation = observations[agent.id]
                     info = infos[agent.id]
-                    actions[agent.id] = agent.get_action(observation, info, step)
+                    actions[agent.id] = agent.get_action(
+                        observation, info, step, i_episode
+                    )
 
                 # call: send actions and get observations
                 observations, scores, terminateds, truncateds, infos = env.step(actions)
@@ -194,7 +196,7 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
                     else:
                         observation = env.observe(agent.id)
                         info = env.observe_info(agent.id)
-                        action = agent.get_action(observation, info, step)
+                        action = agent.get_action(observation, info, step, i_episode)
 
                     # Env step
                     # NB! both AIntelope Zoo and Gridworlds Zoo wrapper in AIntelope

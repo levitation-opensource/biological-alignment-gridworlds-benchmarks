@@ -140,6 +140,7 @@ class Trainer:
         ] = None,
         info: dict = {},
         step: int = 0,
+        episode: int = 0,
     ) -> Optional[int]:
         """
         Get action from an agent
@@ -160,9 +161,11 @@ class Trainer:
         #    )
         # else:
         #    epsilon = 0.0
-        epsilon = self.hparams.model_params.eps_start + (
-            self.hparams.model_params.eps_end - self.hparams.model_params.eps_start
-        ) * min(1, step / self.hparams.model_params.eps_last_frame)
+        epsilon = self.hparams.model_params.eps_end + (
+            self.hparams.model_params.eps_start - self.hparams.model_params.eps_end
+        ) * max(0, 1 - step / self.hparams.model_params.eps_last_frame) * max(
+            0, 1 - episode / self.hparams.model_params.eps_last_episode
+        )
 
         # print(f"Epsilon: {epsilon}")
 
