@@ -30,13 +30,14 @@ class QAgent(Agent):
     ) -> None:
         self.id = agent_id
         self.trainer = trainer
-        self.history: List[HistoryStep] = []
+        # self.history: List[HistoryStep] = []    # this is actually unused
         self.done = False
-        self.last_action = 0
+        self.last_action = None
 
     def reset(self, state, info) -> None:
         """Resets self and updates the state."""
         self.done = False
+        self.last_action = None
         self.state = state
         self.info = info
         # if isinstance(self.state, tuple):
@@ -101,23 +102,24 @@ class QAgent(Agent):
             next_state (npt.NDArray[ObservationFloat]): input for the net
         """
 
+        assert self.last_action is not None
+
         next_state = observation
-        # For future: add state (interoception) handling here when needed
 
         if next_state is not None:
             next_s_hist = next_state
         else:
             next_s_hist = None
-        self.history.append(
-            HistoryStep(
-                state=self.state,
-                action=self.last_action,
-                reward=score,
-                done=done,
-                instinct_events=[],
-                next_state=next_s_hist,
-            )
-        )
+        # self.history.append(
+        #    HistoryStep(
+        #        state=self.state,
+        #        action=self.last_action,
+        #        reward=score,
+        #        done=done,
+        #        instinct_events=[],
+        #        next_state=next_s_hist,
+        #    )
+        # )
 
         event = [self.id, self.state, self.last_action, score, done, next_state]
         self.trainer.update_memory(*event)

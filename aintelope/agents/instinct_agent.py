@@ -85,6 +85,9 @@ class InstinctAgent(QAgent):
             done (bool): if agent is done
             next_state (npt.NDArray[ObservationFloat]): input for the net
         """
+
+        assert self.last_action is not None
+
         next_state = observation
         next_info = info
         # For future: add state (interoception) handling here when needed
@@ -117,16 +120,16 @@ class InstinctAgent(QAgent):
             next_s_hist = next_state
         else:
             next_s_hist = None
-        self.history.append(
-            HistoryStep(
-                state=self.state,
-                action=self.last_action,
-                reward=reward,
-                done=done,
-                instinct_events=instinct_events,
-                next_state=next_s_hist,
-            )
-        )
+        # self.history.append(
+        #    HistoryStep(
+        #        state=self.state,
+        #        action=self.last_action,
+        #        reward=reward,
+        #        done=done,
+        #        instinct_events=instinct_events,
+        #        next_state=next_s_hist,
+        #    )
+        # )
 
         event = [self.id, self.state, self.last_action, reward, done, next_state]
         self.trainer.update_memory(*event)
