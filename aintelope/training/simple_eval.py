@@ -236,9 +236,10 @@ def run_episode(full_params: Dict) -> None:
                         logger.debug((observation, reward, terminated, truncated, info))
 
                         # NB! any agent could die at any other agent's step
-                        for agent_id in env.agents:
-                            dones[agent_id] = (
-                                env.terminations[agent.id] or env.truncations[agent.id]
+                        for agent_id2 in env.agents:
+                            dones[agent_id2] = (
+                                env.terminations[agent_id2]
+                                or env.truncations[agent_id2]
                             )
 
         else:
@@ -346,15 +347,18 @@ def run_episode(full_params: Dict) -> None:
                         rewards[agent.id] = reward
 
                         # NB! any agent could die at any other agent's step
-                        for agent_id in env.agents:
-                            dones[agent_id] = (
-                                env.terminations[agent.id] or env.truncations[agent.id]
+                        for agent_id2 in env.agents:
+                            dones[agent_id2] = (
+                                env.terminations[agent_id2]
+                                or env.truncations[agent_id2]
                             )
         else:
             logger.warning("Simple_eval: non-zoo env, test not yet implemented!")
             pass
 
-        if isinstance(next(iter(rewards.values())), dict):
+        if len(rewards) == 0:
+            pass  # needed to avoid an error in the next blocks. Both below blocks may fail when len(rewards) == 0
+        elif isinstance(next(iter(rewards.values())), dict):
             if (
                 not episode_rewards_upgraded_to_dict_rewards
             ):  # each agent's reward is a dict, need to upgrade the episode_rewards counter  # TODO: detect this early, before the loops start

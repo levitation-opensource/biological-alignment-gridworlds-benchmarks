@@ -122,7 +122,7 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
         elif isinstance(env, AECEnv):
             env.reset()
             for agent in agents:
-                agent.reset(env.observe(agent.id), env.observe_info(agent_id))
+                agent.reset(env.observe(agent.id), env.observe_info(agent.id))
                 dones[agent.id] = False
 
         # Iterations within the episode
@@ -244,9 +244,10 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
                         )
 
                         # NB! any agent could die at any other agent's step
-                        for agent_id in env.agents:
-                            dones[agent_id] = (
-                                env.terminations[agent_id] or env.truncations[agent.id]
+                        for agent_id2 in env.agents:
+                            dones[agent_id2] = (
+                                env.terminations[agent_id2]
+                                or env.truncations[agent_id2]
                             )
                             # TODO: if the agent died during some other agents step,
                             # should we call agent.update() on the dead agent,
