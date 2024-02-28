@@ -171,9 +171,12 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
                     )
 
                     # Record what just happened
-                    env_step_info = [
-                        score.get(dimension, 0) for dimension in score_dimensions
-                    ]
+                    env_step_info = (
+                        [score.get(dimension, 0) for dimension in score_dimensions]
+                        if isinstance(score, dict)
+                        else [score]
+                    )
+
                     events.loc[len(events)] = (
                         [cfg.experiment_name, i_episode, step]
                         + agent_step_info
@@ -234,9 +237,12 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
                         )  # note that score is used ONLY by baseline
 
                         # Record what just happened
-                        env_step_info = [
-                            score.get(dimension, 0) for dimension in score_dimensions
-                        ]
+                        env_step_info = (
+                            [score.get(dimension, 0) for dimension in score_dimensions]
+                            if isinstance(score, dict)
+                            else [score]
+                        )
+
                         events.loc[len(events)] = (
                             [cfg.experiment_name, i_episode, step]
                             + agent_step_info
