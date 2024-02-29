@@ -1,5 +1,4 @@
 
-
 food_5x5:   
   env_params:
     env_experiment: "aintelope.aintelope_savanna"
