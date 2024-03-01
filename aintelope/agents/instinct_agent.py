@@ -40,7 +40,8 @@ class InstinctAgent(QAgent):
             npt.NDArray[ObservationFloat], npt.NDArray[ObservationFloat]
         ] = None,
         info: dict = {},
-        step: int = 0,  # net: nn.Module, epsilon: float, device: str
+        step: int = 0,
+        trial: int = 0,
         episode: int = 0,
         action_biases: list = None,
     ) -> Optional[int]:
@@ -56,7 +57,7 @@ class InstinctAgent(QAgent):
             action (Optional[int]): index of action
         """
         action_biases = None
-        return super().get_action(observation, info, step, episode, action_biases)
+        return super().get_action(observation, info, step, trial, episode, action_biases)
 
     # TODO hack, figure out if state_to_namedtuple can be static somewhere
     def update(

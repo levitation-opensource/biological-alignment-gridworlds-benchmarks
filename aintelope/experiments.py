@@ -113,19 +113,21 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
     for i_episode in range(num_episodes):
         print(f"episode: {i_episode}")
 
+        trial_no = int(i_episode / cfg.hparams.trial_length)
+
         # Reset
         if isinstance(env, ParallelEnv):
             (
                 observations,
                 infos,
-            ) = env.reset(trial_no=int(i_episode / cfg.hparams.trial_length))
+            ) = env.reset(trial_no=trial_no)
             for agent in agents:
                 agent.reset(observations[agent.id], infos[agent.id])
                 # trainer.reset_agent(agent.id)	# TODO: configuration flag
                 dones[agent.id] = False
 
         elif isinstance(env, AECEnv):
-            env.reset(trial_no=int(i_episode / cfg.hparams.trial_length))
+            env.reset(trial_no=trial_no)
             for agent in agents:
                 agent.reset(env.observe(agent.id), env.observe_info(agent.id))
                 # trainer.reset_agent(agent.id)	# TODO: configuration flag
@@ -143,7 +145,7 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
                     observation = observations[agent.id]
                     info = infos[agent.id]
                     actions[agent.id] = agent.get_action(
-                        observation, info, step, i_episode
+                        observation, info, step, trial_no, i_episode
                     )
 
                 # call: send actions and get observations
@@ -205,7 +207,7 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
                     else:
                         observation = env.observe(agent.id)
                         info = env.observe_info(agent.id)
-                        action = agent.get_action(observation, info, step, i_episode)
+                        action = agent.get_action(observation, info, step, trial_no, i_episode)
 
                     # Env step
                     # NB! both AIntelope Zoo and Gridworlds Zoo wrapper in AIntelope

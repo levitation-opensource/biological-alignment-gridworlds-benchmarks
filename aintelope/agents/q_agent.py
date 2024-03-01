@@ -49,7 +49,8 @@ class QAgent(Agent):
             npt.NDArray[ObservationFloat], npt.NDArray[ObservationFloat]
         ] = None,
         info: dict = {},
-        step: int = 0,  # net: nn.Module, epsilon: float, device: str
+        step: int = 0,  
+        trial: int = 0,
         episode: int = 0,        
         action_biases: list = None,
     ) -> Optional[int]:
@@ -69,7 +70,7 @@ class QAgent(Agent):
         else:
             # For future: observation can go to instincts here
             action = self.trainer.get_action(
-                self.id, observation, self.info, step, episode, action_biases
+                self.id, observation, self.info, step, trial, episode, action_biases
             )
 
         self.last_action = action

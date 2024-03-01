@@ -20,7 +20,8 @@ class Agent(ABC):
             npt.NDArray[ObservationFloat], npt.NDArray[ObservationFloat]
         ] = None,
         info: dict = {},
-        step: int = 0,  # net: nn.Module, epsilon: float, device: str
+        step: int = 0,
+        trial: int = 0,
         episode: int = 0,
         action_biases: list = None,
     ) -> Optional[int]:

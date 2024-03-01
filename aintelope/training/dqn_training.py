@@ -155,6 +155,7 @@ class Trainer:
         ] = None,
         info: dict = {},
         step: int = 0,
+        trial: int = 0,
         episode: int = 0,
         action_biases: list = None,
     ) -> Optional[int]:
@@ -177,9 +178,13 @@ class Trainer:
         #    )
         # else:
         #    epsilon = 0.0
+
+        # TODO: option to disable eps_end, eps_last_trial, eps_last_frame
         epsilon = self.hparams.model_params.eps_end + (
             self.hparams.model_params.eps_start - self.hparams.model_params.eps_end
         ) * max(0, 1 - step / self.hparams.model_params.eps_last_frame) * max(
+            0, 1 - trial / self.hparams.model_params.eps_last_trial
+        ) * max(
             0, 1 - episode / self.hparams.model_params.eps_last_episode
         )
 
