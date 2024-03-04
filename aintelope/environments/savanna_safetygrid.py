@@ -17,6 +17,7 @@ from ai_safety_gridworlds.environments.aintelope.aintelope_savanna import (  # T
     SILVER_CHR,
     DANGER_TILE_CHR,
     PREDATOR_NPC_CHR,
+    WALL_CHR,
     GAME_ART,
 )
 
@@ -53,6 +54,7 @@ INFO_AGENT_INTEROCEPTION_VECTOR = "info_agent_interoception_vector"
 INTEROCEPTION_FOOD = "food_satiation"
 INTEROCEPTION_DRINK = "drink_satiation"
 ACTION_RELATIVE_COORDINATE_MAP = "action_relative_coordinate_map"   # TODO: move to Gridworld environment
+ALL_AGENTS_LAYER = "all_agents"
 
 logger = logging.getLogger("aintelope.environments.savanna_safetygrid")
 
@@ -177,6 +179,8 @@ class GridworldZooBaseEnv:
             "FOOD_EXTRACTION_RATE": "FOOD_EXTRACTION_RATE",
             "FOOD_DEFICIENCY_RATE": "FOOD_DEFICIENCY_RATE",
             "FOOD_OVERSATIATION_LIMIT": "FOOD_OVERSATIATION_LIMIT",
+            "FOOD_OVERSATIATION_THRESHOLD": "FOOD_OVERSATIATION_THRESHOLD",
+            "FOOD_DEFICIENCY_THRESHOLD": "FOOD_DEFICIENCY_THRESHOLD",
             #
             "FOOD_GROWTH_LIMIT": "FOOD_GROWTH_LIMIT",
             "FOOD_REGROWTH_EXPONENT": "FOOD_REGROWTH_EXPONENT",
@@ -189,6 +193,8 @@ class GridworldZooBaseEnv:
             "DRINK_EXTRACTION_RATE": "DRINK_EXTRACTION_RATE",
             "DRINK_DEFICIENCY_RATE": "DRINK_DEFICIENCY_RATE",
             "DRINK_OVERSATIATION_LIMIT": "DRINK_OVERSATIATION_LIMIT",
+            "DRINK_OVERSATIATION_THRESHOLD": "DRINK_OVERSATIATION_THRESHOLD",
+            "DRINK_DEFICIENCY_THRESHOLD": "DRINK_DEFICIENCY_THRESHOLD",
             #
             "DRINK_GROWTH_LIMIT": "DRINK_GROWTH_LIMIT",
             "DRINK_REGROWTH_EXPONENT": "DRINK_REGROWTH_EXPONENT",
@@ -360,31 +366,40 @@ class GridworldZooBaseEnv:
             ]
         )
 
-        return {
-            INFO_AGENT_OBSERVATION_COORDINATES: info[
+        all_agents_coordinates = []
+        for agent_name, agent_chr in self.agent_name_mapping.items():
+            all_agents_coordinates += info[INFO_AGENT_OBSERVATION_COORDINATES][
+                agent_chr
+            ]
+
+        coordinates_dict = dict(info[
                 INFO_AGENT_OBSERVATION_COORDINATES
-            ],
+            ])
+        coordinates_dict[ALL_AGENTS_LAYER] = all_agents_coordinates
+
+        return {
+            INFO_AGENT_OBSERVATION_COORDINATES: coordinates_dict,
             INFO_AGENT_OBSERVATION_LAYERS_ORDER: info[
                 INFO_AGENT_OBSERVATION_LAYERS_ORDER
             ]
-            + ["all_agents"],
+            + [ALL_AGENTS_LAYER],
             INFO_AGENT_OBSERVATION_LAYERS_CUBE: info[
                 INFO_AGENT_OBSERVATION_LAYERS_CUBE
             ],
             INFO_AGENT_OBSERVATION_LAYERS_DICT: info[
                 INFO_AGENT_OBSERVATION_LAYERS_DICT
             ],
-            INFO_AGENT_INTEROCEPTION_ORDER: ["food_satiation", "drink_satiation"],
+            INFO_AGENT_INTEROCEPTION_ORDER: [INTEROCEPTION_FOOD, INTEROCEPTION_DRINK],
             INFO_AGENT_INTEROCEPTION_VECTOR: agent_interoception_vector,
             INFO_REWARD_DICT: info[INFO_REWARD_DICT],
             INFO_CUMULATIVE_REWARD_DICT: info[INFO_CUMULATIVE_REWARD_DICT],
             # TODO: in case of relative direction, this mapping will change depending on agent and depending on its direction
             ACTION_RELATIVE_COORDINATE_MAP: {   # TODO: read these constants from the environment?
-                Actions.NOOP: [0, 0],
-                Actions.LEFT: [-1, 0],
-                Actions.RIGHT: [1, 0],
-                Actions.UP: [0, -1],
-                Actions.DOWN: [0, 1],
+                Actions.NOOP: (0, 0),
+                Actions.LEFT: (-1, 0),
+                Actions.RIGHT: (1, 0),
+                Actions.UP: (0, -1),
+                Actions.DOWN: (0, 1),
             }
         }
 
