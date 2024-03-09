@@ -3,6 +3,7 @@ from ast import literal_eval
 from pathlib import Path
 import zipfile
 import os
+import uuid
 import torch
 
 from omegaconf import DictConfig, OmegaConf
@@ -13,8 +14,17 @@ def get_project_path(path_from_root: str) -> Path:
     return project_root / path_from_root
 
 
+def append_pid_and_uuid(timestamp: str) -> str:
+    pid = os.getpid()
+    unique_id = uuid.uuid1()  # Generate a UUID from a host ID, sequence number, and the current time. If node is not given, getnode() is used to obtain the hardware address. If clock_seq is given, it is used as the sequence number; otherwise a random 14-bit sequence number is chosen.  # TODO: uuid1 is good for multi-machine cloud computing. Other uuid methods might be preferrable in case of privacy considerations. See https://docs.python.org/3/library/uuid.html
+    result = f"{timestamp}_{pid}_{unique_id}"
+    return result
+
+
 def register_resolvers() -> None:
-    OmegaConf.register_resolver("abs_path", get_project_path)
+    OmegaConf.register_new_resolver("abs_path", get_project_path)
+    OmegaConf.register_new_resolver("minus_3", lambda x: x - 3)
+    OmegaConf.register_new_resolver("append_pid_and_uuid", append_pid_and_uuid, use_cache=True)   # NB! need to enable caching else the pid_and_uuid will change at random moments during execution, leading to errors
 
 
 def get_score_dimensions(cfg: DictConfig):

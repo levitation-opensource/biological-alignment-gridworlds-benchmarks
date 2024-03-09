@@ -21,11 +21,13 @@ logger = logging.getLogger("aintelope.__main__")
 
 @hydra.main(version_base=None, config_path="config", config_name="config_experiment")
 def aintelope_main(cfg: DictConfig) -> None:
-  
-    archive_code(cfg)
 
     timestamp = str(cfg.timestamp)
+    timestamp_pid_uuid = str(cfg.timestamp_pid_uuid)
     logger.info(f"timestamp: {timestamp}")
+    logger.info(f"timestamp_pid_uuid: {timestamp_pid_uuid}")
+
+    archive_code(cfg)
 
     pipeline_config = OmegaConf.load("aintelope/config/config_pipeline.yaml")
     # score_dimensions = get_pipeline_score_dimensions(cfg, pipeline_config)
@@ -56,6 +58,7 @@ def aintelope_main(cfg: DictConfig) -> None:
             # gc.collect()
 
             if is_last_pipeline_cycle:
+                # Not using timestamp_pid_uuid here since it would make the title too long. In case of manual execution with plots, the pid-uuid is probably not needed anyway.
                 title = timestamp + " : " + params_set_title + " : " + env_conf_name
                 analytics(experiment_cfg, score_dimensions, title=title, experiment_name=env_conf_name)
 
