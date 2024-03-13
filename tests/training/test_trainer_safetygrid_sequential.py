@@ -61,7 +61,7 @@ def test_training_pipeline_baseline():
             "aintelope.environments.savanna_safetygrid:SavannaGridworldSequentialEnv"
         ),
         "hparams.env_type=zoo",
-        "hparams.agent_id=q_agent",
+        "hparams.agent_class=q_agent",
         "hparams.agent_params.target_instincts=[]",
         "hparams.unit_test_mode=True",
         "hparams.num_episodes=5",
@@ -86,7 +86,7 @@ def test_training_pipeline_baseline_with_dead_agents(execution_number):
             "aintelope.environments.savanna_safetygrid:SavannaGridworldSequentialEnv"
         ),
         "hparams.env_type=zoo",
-        "hparams.agent_id=q_agent",
+        "hparams.agent_class=q_agent",
         "hparams.agent_params.target_instincts=[]",
         "hparams.env_params.seed=" + str(execution_number),
         "hparams.env_params.test_death=True",
@@ -111,7 +111,7 @@ def test_training_pipeline_instinct():
             "aintelope.environments.savanna_safetygrid:SavannaGridworldSequentialEnv"
         ),
         "hparams.env_type=zoo",
-        "hparams.agent_id=instinct_agent",
+        "hparams.agent_class=instinct_agent",
         "hparams.agent_params.target_instincts=[smell]",
         "hparams.unit_test_mode=True",
         "hparams.num_episodes=5",
@@ -136,7 +136,7 @@ def test_training_pipeline_instinct_with_dead_agents(execution_number):
             "aintelope.environments.savanna_safetygrid:SavannaGridworldSequentialEnv"
         ),
         "hparams.env_type=zoo",
-        "hparams.agent_id=instinct_agent",
+        "hparams.agent_class=instinct_agent",
         "hparams.agent_params.target_instincts=[smell]",
         "hparams.env_params.seed=" + str(execution_number),
         "hparams.env_params.test_death=True",
