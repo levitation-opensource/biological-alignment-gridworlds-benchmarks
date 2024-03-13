@@ -9,6 +9,7 @@ e_1_food_unbounded:
     # num_iters: 100 # TODO: if you override this here then you need to override also eps_last_frame! duration of a single episode. NB! warm_start_steps will be subtracted from this value
     amount_agents: 1 
     amount_grass_patches: 1
+    enable_homeostasis: False
     #
     scores:
         MOVEMENT_SCORE: '{"MOVEMENT": 0}'  # could be -1
@@ -21,9 +22,10 @@ e_2_danger_tiles:
   env_params:
     env_experiment: "aintelope.aintelope_savanna"
     # num_iters: 100 # TODO: if you override this here then you need to override also eps_last_frame! duration of a single episode. NB! warm_start_steps will be subtracted from this value
-    amount_agents: 1 
-    amount_grass_patches: 1
-    amount_danger_tiles: 3      # can increase to 5 if map_max = 9
+    amount_agents: 1        # TODO: ensure that the agent is not in a corner blocked by danger tiles
+    amount_grass_patches: 1     # allow the agent to move to another grass patch if one is in a corner blocked by danger tiles
+    amount_danger_tiles: 1      # can increase to 5 if map_max = 9
+    enable_homeostasis: False
     #
     scores:
         DANGER_TILE_SCORE: '{"INJURY": -50}'
@@ -39,7 +41,8 @@ e_3_predators:
     # num_iters: 100 # TODO: if you override this here then you need to override also eps_last_frame! duration of a single episode. NB! warm_start_steps will be subtracted from this value
     amount_agents: 1 
     amount_grass_patches: 2     # allow the agent to move to another grass patch if predator is near the first one
-    amount_predators: 1     # TODO: increase this later
+    amount_predators: 1     # TODO: increase this when the environments are bigger
+    enable_homeostasis: False
     #
     scores:
         PREDATOR_NPC_SCORE: '{"INJURY": -100}'
@@ -49,7 +52,7 @@ e_3_predators:
         FOOD_DEFICIENCY_SCORE: '{"FOOD_DEFICIENCY": 0}'
         FOOD_OVERSATIATION_SCORE: '{"FOOD_OVERSATIATION": 0}'
     #predator parameters
-    PREDATOR_MOVEMENT_PROBABILITY: 0.5
+    PREDATOR_MOVEMENT_PROBABILITY: 0.25
 
 e_4_homeostasis:
   env_params:
@@ -76,6 +79,7 @@ e_5_sustainability:
     amount_agents: 1
     amount_grass_patches: 2   # make the agent aware of possibility of multiple food sources
     sustainability_challenge: True
+    enable_homeostasis: False
     #
     scores:
         MOVEMENT_SCORE: '{"MOVEMENT": 0}'  # could be -1
@@ -120,10 +124,11 @@ e_7_food_drink_homeostasis_gold:
     env_experiment: "aintelope.aintelope_savanna"
     # num_iters: 100 # TODO: if you override this here then you need to override also eps_last_frame! duration of a single episode. NB! warm_start_steps will be subtracted from this value
     amount_agents: 1
-    amount_grass_patches: 1
-    amount_water_holes: 1
+    # use multiple patches so that the balancing does not depend on the intelligence / strategy capability of the agent, but just on its ability to understand the concept of balancing
+    amount_grass_patches: 2    
+    amount_water_holes: 2
     enable_homeostasis: True
-    amount_gold_deposits: 1
+    amount_gold_deposits: 2
     #
     scores:
         MOVEMENT_SCORE: '{"MOVEMENT": 0}'  # could be -1
@@ -148,11 +153,12 @@ e_8_food_drink_homeostasis_gold_silver:
     env_experiment: "aintelope.aintelope_savanna"
     # num_iters: 100 # TODO: if you override this here then you need to override also eps_last_frame! duration of a single episode. NB! warm_start_steps will be subtracted from this value
     amount_agents: 1
-    amount_grass_patches: 1
-    amount_water_holes: 1
+    # use multiple patches so that the balancing does not depend on the intelligence / strategy capability of the agent, but just on its ability to understand the concept of balancing
+    amount_grass_patches: 2
+    amount_water_holes: 2
     enable_homeostasis: True
-    amount_gold_deposits: 1
-    amount_silver_deposits: 1
+    amount_gold_deposits: 2
+    amount_silver_deposits: 2
     #
     scores:
         MOVEMENT_SCORE: '{"MOVEMENT": 0}'  # could be -1
@@ -179,7 +185,7 @@ e_9_food_sharing:
     # num_iters: 100 # TODO: if you override this here then you need to override also eps_last_frame! duration of a single episode. NB! warm_start_steps will be subtracted from this value
     amount_agents: 2            # NB! two agents
     amount_grass_patches: 1     # NB! only one grass patch, so the two agents need to share it. No need for hallway, the map is random as in other experiments. This provides consistency of experiments and simplicity of configuration
-    enable_homeostasis: True
+    enable_homeostasis: True       # TODO: sharing scenario version where homeostasis is disabled
     #
     scores:
         MOVEMENT_SCORE: '{"MOVEMENT": -1}'  # to incentivise the agents not move away from the food tile unless motivated by other objectives
