@@ -382,7 +382,9 @@ def run_pipeline(cfg: DictConfig) -> None:
     ) as semaphore:
         with AcquireSemaphore(semaphore) if os.name == "nt" else DummyContext():
             with (
-                posix_ipc.Semaphore(semaphore_name)
+                posix_ipc.Semaphore(
+                    semaphore_name, flags=posix_ipc.O_CREAT, initial_value=num_workers
+                )
                 if os.name != "nt"
                 else DummyContext()
             ):
@@ -550,7 +552,7 @@ def run_pipeline(cfg: DictConfig) -> None:
 
                     # / for i_pipeline_cycle in range(0, max_pipeline_cycle):
                 # / with ProgressBar(max_value=max_pipeline_cycle) as pipeline_cycle_bar:
-            # / with posix_ipc.Semaphore(name):
+            # / with posix_ipc.Semaphore():
         # / with AcquireSemaphore(created, timeout_ms=0):
     # / with CreateSemaphore('name', maximum_count=num_workers) as semaphore:
 
@@ -680,6 +682,7 @@ if __name__ == "__main__":
     set_memory_limits()
 
     # Need to choose GPU early before torch fully starts up. Else there may be CUDA errors later.
+    # TODO: merge this code into select_gpu() function
     gridsearch_gpu = os.environ.get("GRIDSEARCH_GPU")
     if gridsearch_gpu is not None:
         gridsearch_gpu = int(gridsearch_gpu)

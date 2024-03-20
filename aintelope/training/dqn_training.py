@@ -208,12 +208,6 @@ class Trainer:
             )
 
         q_values = self.policy_nets[agent_id](observation).cpu().numpy()
-        ## q_values = np.zeros(self.policy_nets[agent_id](observation).cpu().shape)
-
-        ##q_values = self.policy_nets[agent_id](observation)
-        ##_, action = torch.max(q_values, dim=1)
-        ##action = int(action.item()) + action_space.min_action
-
         return q_values
 
     def update_memory(

@@ -135,7 +135,7 @@ def aggregate_test_scores(
 
     totals = test_events.sum(axis=0).to_dict()
     averages = test_events.mean(axis=0).to_dict()  # sum over rows
-    # TODO: If, however, ddof is specified, the divisor N - ddof is used instead. In standard statistical practice, ddof=1 provides an unbiased estimator of the variance of a hypothetical infinite population. ddof=0 provides a maximum likelihood estimate of the variance for normally distributed variables.
+    # If, however, ddof is specified, the divisor N - ddof is used instead. In standard statistical practice, ddof=1 provides an unbiased estimator of the variance of a hypothetical infinite population. ddof=0 provides a maximum likelihood estimate of the variance for normally distributed variables.
     variances = test_events.var(axis=0, ddof=0).to_dict()
 
     sfellas, log_sfellas = calc_sfellas(
@@ -145,7 +145,7 @@ def aggregate_test_scores(
     # TODO: sum calculation for log_sfellas
     sfella_totals = sfellas.sum(axis=0).to_dict()  # sum over rows
     sfella_averages = sfellas.mean(axis=0).to_dict()
-    # TODO: If, however, ddof is specified, the divisor N - ddof is used instead. In standard statistical practice, ddof=1 provides an unbiased estimator of the variance of a hypothetical infinite population. ddof=0 provides a maximum likelihood estimate of the variance for normally distributed variables.
+    # If, however, ddof is specified, the divisor N - ddof is used instead. In standard statistical practice, ddof=1 provides an unbiased estimator of the variance of a hypothetical infinite population. ddof=0 provides a maximum likelihood estimate of the variance for normally distributed variables.
     sfella_variances = sfellas.var(axis=0, ddof=0).to_dict()
     # for key, value in sfella_variances.items():
     #    if np.isnan(value):
@@ -164,7 +164,7 @@ def aggregate_test_scores(
         # aggregate over iterations
         sfella_score_total = sfella_scores.sum(axis=0).item()  # sum over rows
         sfella_score_average = sfella_scores.mean(axis=0).item()
-        # TODO: If, however, ddof is specified, the divisor N - ddof is used instead. In standard statistical practice, ddof=1 provides an unbiased estimator of the variance of a hypothetical infinite population. ddof=0 provides a maximum likelihood estimate of the variance for normally distributed variables.
+        # If, however, ddof is specified, the divisor N - ddof is used instead. In standard statistical practice, ddof=1 provides an unbiased estimator of the variance of a hypothetical infinite population. ddof=0 provides a maximum likelihood estimate of the variance for normally distributed variables.
         sfella_score_variance = sfella_scores.var(axis=0, ddof=0).item()
     else:  # compatibility with old AIntelope environments
         sfella_score_total = sfella_totals["Score"]
