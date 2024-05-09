@@ -10,7 +10,6 @@ from aintelope.utils import RobustProgressBar
 
 from aintelope.agents import get_agent_class
 from aintelope.analytics import recording as rec
-from aintelope.config.config_utils import DummyContext
 from aintelope.environments import get_env_class
 from aintelope.environments.savanna_safetygrid import GridworldZooBaseEnv
 from aintelope.training.dqn_training import Trainer
@@ -22,7 +21,7 @@ def run_experiment(
     cfg: DictConfig,
     experiment_name: str = "",
     score_dimensions: list = [],
-    is_last_pipeline_cycle: bool = True,
+    test_mode: bool = True,
     i_pipeline_cycle: int = 0,
 ) -> None:
     logger = logging.getLogger("aintelope.experiment")
@@ -142,31 +141,29 @@ def run_experiment(
         + (score_dimensions if isinstance(env, GridworldZooBaseEnv) else ["Score"])
     )
 
-    last_episode_was_saved = (
-        True  # if not training episodes are specified then do not save models
+    model_needs_saving = (
+        False  # if no training episodes are specified then do not save models
     )
     # num_episodes = cfg.hparams.num_episodes + cfg.hparams.test_episodes
-    # num_episodes = (cfg.hparams.num_episodes if not is_last_pipeline_cycle else 0) + (cfg.hparams.test_episodes if is_last_pipeline_cycle else 0)
+    # num_episodes = (cfg.hparams.num_episodes if not test_mode else 0) + (cfg.hparams.test_episodes if test_mode else 0)
     # for i_episode in range(num_episodes):
     r = (
         range(cfg.hparams.num_episodes)
-        if not is_last_pipeline_cycle
+        if not test_mode
         else range(
             cfg.hparams.num_episodes,
             cfg.hparams.num_episodes + cfg.hparams.test_episodes,
         )
     )  # TODO: concatenate test plot in plotting.py
 
-    with (
-        RobustProgressBar(max_value=len(r)) if not unit_test_mode else DummyContext()
+    with RobustProgressBar(
+        max_value=len(r), disable=unit_test_mode
     ) as episode_bar:  # this is a slow task so lets use a progress bar    # note that ProgressBar crashes under unit test mode, so it will be disabled if unit_test_mode is on   # TODO: create a custom extended ProgressBar class that automatically turns itself off during unit test mode
         for i_episode in r:
-            # test_mode = (i_episode >= cfg.hparams.num_episodes)
-            test_mode = is_last_pipeline_cycle
             trial_no = (
                 int(i_episode / cfg.hparams.trial_length)
                 if cfg.hparams.trial_length > 0
-                else i_episode  # this ensures that trial_no based map randomization seed is different from training seeds even when using pipeline training. During pipeline training, the environment is re-constructed when testing starts. Without explicitly providing trial_no, the map randomization seed would be automatically reset to trial_no = 0, which would overlap with the training seeds.
+                else i_episode  # this ensures that during test episodes, trial_no based map randomization seed is different from training seeds. The environment is re-constructed when testing starts. Without explicitly providing trial_no, the map randomization seed would be automatically reset to trial_no = 0, which would overlap with the training seeds.
             )
 
             print(
@@ -176,9 +173,9 @@ def run_experiment(
             # TODO: refactor these checks into separate function        # Save models
             # https://pytorch.org/tutorials/recipes/recipes/
             # saving_and_loading_a_general_checkpoint.html
-            if i_episode > 0:
-                if not test_mode:
-                    last_episode_was_saved = False
+            if not test_mode:
+                if i_episode > 0:
+                    model_needs_saving = True
                     if i_episode % cfg.hparams.save_frequency == 0:
                         os.makedirs(dir_cp, exist_ok=True)
                         trainer.save_models(
@@ -187,35 +184,27 @@ def run_experiment(
                             experiment_name,
                             use_separate_models_for_each_experiment,
                         )
-                        last_episode_was_saved = True
-                else:  # when test mode starts, save last unsaved model immediately
-                    if (
-                        not last_episode_was_saved
-                    ):  # happens when num_episodes is not divisible by save frequency
-                        os.makedirs(dir_cp, exist_ok=True)
-                        trainer.save_models(
-                            i_episode,
-                            dir_cp,
-                            experiment_name,
-                            use_separate_models_for_each_experiment,
-                        )
-                        last_episode_was_saved = True
-            elif not test_mode:
-                last_episode_was_saved = False
+                        model_needs_saving = False
+                else:
+                    model_needs_saving = True
 
             # Reset
             if isinstance(env, ParallelEnv):
                 (
                     observations,
                     infos,
-                ) = env.reset(trial_no=trial_no)
+                ) = env.reset(
+                    trial_no=trial_no
+                )  # if not test_mode else -(trial_no - cfg.hparams.num_episodes + 1))
                 for agent in agents:
                     agent.reset(observations[agent.id], infos[agent.id], type(env))
                     # trainer.reset_agent(agent.id)	# TODO: configuration flag
                     dones[agent.id] = False
 
             elif isinstance(env, AECEnv):
-                env.reset(trial_no=trial_no)
+                env.reset(
+                    trial_no=trial_no
+                )  # if not test_mode else -(trial_no - cfg.hparams.num_episodes + 1))
                 for agent in agents:
                     agent.reset(
                         env.observe(agent.id), env.observe_info(agent.id), type(env)
@@ -224,12 +213,10 @@ def run_experiment(
                     dones[agent.id] = False
 
             # Iterations within the episode
-            with (
-                RobustProgressBar(
-                    max_value=cfg.hparams.env_params.num_iters, granularity=100
-                )
-                if not unit_test_mode
-                else DummyContext()
+            with RobustProgressBar(
+                max_value=cfg.hparams.env_params.num_iters,
+                granularity=100,
+                disable=unit_test_mode,
             ) as step_bar:  # this is a slow task so lets use a progress bar    # note that ProgressBar crashes under unit test mode, so it will be disabled if unit_test_mode is on
                 for step in range(cfg.hparams.env_params.num_iters):
                     # if step > 0 and step % 100 == 0:
@@ -416,7 +403,9 @@ def run_experiment(
 
                     # Break when all agents are done
                     if all(dones.values()):
-                        step_bar.update(cfg.hparams.env_params.num_iters)
+                        step_bar.update(
+                            cfg.hparams.env_params.num_iters
+                        )  # TODO: maybe this line is not needed and progress bar automatically jumps to 100%
                         break
 
                     step_bar.update(step + 1)
@@ -430,7 +419,7 @@ def run_experiment(
     # / with RobustProgressBar(max_value=len(r)) as bar:
 
     if (
-        not last_episode_was_saved
+        model_needs_saving
     ):  # happens when num_episodes is not divisible by save frequency
         os.makedirs(dir_cp, exist_ok=True)
         trainer.save_models(

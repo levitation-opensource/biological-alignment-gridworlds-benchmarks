@@ -27,7 +27,6 @@ from matplotlib import pyplot as plt
 from aintelope.analytics import plotting, recording
 from aintelope.config.config_utils import (
     archive_code,
-    DummyContext,
     get_pipeline_score_dimensions,
     get_score_dimensions,
 )
@@ -121,9 +120,7 @@ def run_pipeline(cfg: DictConfig) -> None:
             max_value=max_pipeline_cycle
         ) as pipeline_cycle_bar:  # this is a slow task so lets use a progress bar
             for i_pipeline_cycle in range(0, max_pipeline_cycle):
-                is_last_pipeline_cycle = (
-                    i_pipeline_cycle == cfg.hparams.num_pipeline_cycles
-                )
+                test_mode = i_pipeline_cycle == cfg.hparams.num_pipeline_cycles
 
                 with RobustProgressBar(
                     max_value=len(pipeline_config)
@@ -259,7 +256,7 @@ def run_pipeline(cfg: DictConfig) -> None:
                                 experiment_cfg,
                                 experiment_name=env_conf_name,
                                 score_dimensions=score_dimensions,
-                                is_last_pipeline_cycle=False,
+                                test_mode=False,
                                 i_pipeline_cycle=i_pipeline_cycle,
                             )
 
@@ -267,14 +264,14 @@ def run_pipeline(cfg: DictConfig) -> None:
                             experiment_cfg,
                             experiment_name=env_conf_name,
                             score_dimensions=score_dimensions,
-                            is_last_pipeline_cycle=is_last_pipeline_cycle,
+                            test_mode=test_mode,
                             i_pipeline_cycle=i_pipeline_cycle,
                         )
 
                         # torch.cuda.empty_cache()
                         # gc.collect()
 
-                        if is_last_pipeline_cycle:
+                        if test_mode:
                             # Not using timestamp_pid_uuid here since it would make the title too long. In case of manual execution with plots, the pid-uuid is probably not needed anyway.
                             title = (
                                 timestamp

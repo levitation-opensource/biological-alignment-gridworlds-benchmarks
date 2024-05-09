@@ -29,7 +29,7 @@ def aintelope_main(cfg: DictConfig) -> None:
         cfg,
         experiment_name="Nonpipeline",
         score_dimensions=score_dimensions,
-        is_last_pipeline_cycle=False,
+        test_mode=False,
         i_pipeline_cycle=0,
     )
 
