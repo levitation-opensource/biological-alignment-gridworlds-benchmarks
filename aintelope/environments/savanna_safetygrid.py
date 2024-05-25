@@ -228,7 +228,7 @@ class GridworldZooBaseEnv:
         }
 
         self.super_initargs = {
-            "env_name": "aintelope.environments.ai_safety_gridworlds.aintelope_savanna"
+            "env_name": "ai_safety_gridworlds.aintelope_savanna"
         }
 
         for super_initargs_key, metadata_key in metadata_to_super_initargs_dict.items():
