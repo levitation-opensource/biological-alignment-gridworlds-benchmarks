@@ -49,7 +49,7 @@ def init_experiment_flags():
 
 
 class AIntelopeSavannaEnvironmentMaExperiment(AIntelopeSavannaEnvironmentMa):
-    """Python environment for the island navigation environment."""
+    """Python environment for the savanna environment."""
 
     def __init__(self, FLAGS=None, **kwargs):
         """Builds a `AIntelopeSavannaEnvironmentMaExperiment` python environment.
