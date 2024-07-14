@@ -235,6 +235,8 @@ def plot_performance(
     )
     plot_datas = [plot_data1, plot_data2, plot_data3]
 
+    plt.rcParams['figure.constrained_layout.use'] = True    # ensure that plot labels fit to the image and do not overlap
+
     # fig = plt.figure()
     fig, subplots = plt.subplots(3)
 
@@ -282,13 +284,13 @@ def plot_heatmap(agent, env):
     return plot
 
 
-def save_plot(plot, save_path):
+def save_plot(plot, save_path, **kwargs):
     """
     Save plot to file. Will get deprecated if nothing else comes here.
     """
     # save in two formats. SVG is good for resizing during viewing
-    plot.savefig(save_path + ".png", dpi=200)
-    plot.savefig(save_path + ".svg", dpi=200)
+    plot.savefig(save_path + ".png", dpi=200, **kwargs)
+    plot.savefig(save_path + ".svg", dpi=200, **kwargs)
 
 
 def prettyprint(data):
