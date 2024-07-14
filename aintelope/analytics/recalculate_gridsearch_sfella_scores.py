@@ -30,7 +30,7 @@ def recalculate_gridsearch_sfella_scores(cfg: DictConfig) -> None:
     # if gridsearch_config is None:
     #    gridsearch_config = "initial_config_gridsearch.yaml"
     initial_config_gridsearch = OmegaConf.load(
-        os.path.join("aintelope/config", gridsearch_config_file)
+        os.path.join("aintelope", "config", gridsearch_config_file)
     )
 
     OmegaConf.update(cfg, "hparams", initial_config_gridsearch.hparams, force_add=True)

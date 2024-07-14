@@ -18,6 +18,10 @@ from flatten_dict.reducers import make_reducer
 # this one is cross-platform
 from filelock import FileLock
 
+import seaborn as sns
+from matplotlib import pyplot as plt
+
+from aintelope.analytics.plotting import save_plot
 from aintelope.config.config_utils import register_resolvers
 from aintelope.utils import wait_for_enter, try_df_to_csv_write, RobustProgressBar
 
@@ -29,13 +33,28 @@ from aintelope.utils import wait_for_enter, try_df_to_csv_write, RobustProgressB
     config_name="config_experiment",
 )
 def gridsearch_analytics(cfg: DictConfig) -> None:
+    # TODO: command line arguments
+    gridsearch_cycle_count = 4  # max cycle count   # TODO: read from config
+    eval_cycle_count = 100  # gridsearch_cycle_count if gridsearch_cycle_count is not None else 25    # min cycle count       # TODO: read from config
+
+    create_specialised_pipeline_config_with_best_parameters = False
+    copy_log_files_of_best_parameter_combinations_to_separate_folder = False
+
+    compute_average_evals_scores_per_parameter_combination = True  # if set to false then all cycles of evals with best gridsearch parameter combination are outputted in separate rows of the output CSV file
+    create_box_plots = False  # if you set this to True then you need to set compute_average_evals_scores_per_parameter_combination = False
+    return_n_best_combinations = (
+        1  # used when compute_average_evals_scores_per_parameter_combination == True
+    )
+
+    # TODO: warn when there is less data than gridsearch_cycle_count or eval_cycle_count require
+
     # TODO: refactor into a shared method
     # TODO: automatically select correct gridsearch config file based on main cfg
     gridsearch_config_file = os.environ.get("GRIDSEARCH_CONFIG")
     # if gridsearch_config is None:
     #    gridsearch_config = "initial_config_gridsearch.yaml"
     initial_config_gridsearch = OmegaConf.load(
-        os.path.join("aintelope/config", gridsearch_config_file)
+        os.path.join("aintelope", "config", gridsearch_config_file)
     )
 
     OmegaConf.update(cfg, "hparams", initial_config_gridsearch.hparams, force_add=True)
@@ -47,9 +66,6 @@ def gridsearch_analytics(cfg: DictConfig) -> None:
         True  # TODO: override function argument
     )
 
-    compute_average_evals_scores_per_parameter_combination = False  # if set to false then all cycles of evals with best gridsearch parameter combination are outputted in separate rows of the output CSV file
-
-    return_n_best_combinations = 1  # TODO: function argument
     if not compute_average_evals_scores_per_parameter_combination:
         return_n_best_combinations = 1
 
@@ -212,8 +228,18 @@ def gridsearch_analytics(cfg: DictConfig) -> None:
         )
     ]
 
-    gridsearch_cycle_count = 100  # max cycle count   # TODO: read from config
-    eval_cycle_count = 100  # gridsearch_cycle_count if gridsearch_cycle_count is not None else 25    # min cycle count       # TODO: read from config
+    df_pre_filtering_cycle_count_transforms = [
+        df,
+        df.groupby(evals_parameter_grouping_cols, sort=False)
+        .transform(  # NB! here we transform(), not agg() so that the input rows are preserved and just a new column is added
+            "size"
+        )  # count rows per group
+        .rename("evals_count_per_experiment", inplace=False),
+    ]
+    df = pd.concat(
+        df_pre_filtering_cycle_count_transforms,  # NB! Here we do not reindex, else it would not be possible to apply gridsearch_mask to gridsearch_df_params_and_results. Also we do not need to reindex here since this list contains only transforms and not aggregations.
+        axis=1,
+    )
 
     df = df[
         df["gridsearch_params.hparams.gridsearch_trial_no"] < eval_cycle_count
@@ -226,7 +252,13 @@ def gridsearch_analytics(cfg: DictConfig) -> None:
         gridsearch_cycle_count is not None
     ):  # keep only rows up to given trial no in gridsearch df
         gridsearch_df = df[
-            df["gridsearch_params.hparams.gridsearch_trial_no"] < gridsearch_cycle_count
+            (
+                df["gridsearch_params.hparams.gridsearch_trial_no"]
+                < gridsearch_cycle_count
+            )
+            & (
+                df["evals_count_per_experiment"] >= eval_cycle_count
+            )  # select only gridsearch results that have also sufficient evals cycle count available
         ]
     else:
         gridsearch_df = df
@@ -652,7 +684,7 @@ def gridsearch_analytics(cfg: DictConfig) -> None:
     # / # select evals rows that have same parameter sets as best gridsearch parameter sets
 
     # copy log files of selected grid search and evals results to a separate output folder
-    if True:  # TODO: function argument
+    if copy_log_files_of_best_parameter_combinations_to_separate_folder:
         log_dir_root = os.path.normpath(
             cfg["log_dir_root"]
         )  # os.path.normpath removes any trailing slashes
@@ -919,94 +951,126 @@ def gridsearch_analytics(cfg: DictConfig) -> None:
         header=True,
     )
 
-    # create a new specialised pipeline config files based on the best parameters per experiment
-    pipeline_config_file = os.environ.get("PIPELINE_CONFIG")
-    using_default_pipeline_config_file = False
-    if pipeline_config_file is None:
-        pipeline_config_file = "config_pipeline.yaml"
-        using_default_pipeline_config_file = True
+    if create_box_plots:
+        axes = sns.boxplot(
+            data=best_parameters_by_score_shortened,
+            x="test_averages.Score",
+            y="experiment_name",
+            hue="params_set_title",
+            showfliers=False,
+            orient="h",
+        )  # "y" means grouping by experiment, "hue" means bars inside a group of experiment
 
-    pipeline_config = OmegaConf.load(
-        os.path.join("aintelope/config", pipeline_config_file)
-    )
+        source_dir = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "..", ".."
+        )
+        save_path = os.path.join(source_dir, "boxplots")
+        save_plot(axes.figure, save_path)
 
-    for combination_i in range(0, return_n_best_combinations):
-        # TODO: ensure to do not use special pipeline config when doing initial gridsearch
-        if using_default_pipeline_config_file:
-            parts = os.path.splitext(pipeline_config_file)
-            specialised_pipeline_config_file = (
-                parts[0]
-                + "_"
-                + cfg.hparams.params_set_title
-                + ("_common" if not use_separate_parameters_for_each_experiment else "")
-                + (f"_{combination_i + 1}" if combination_i > 0 else "")
-                + parts[1]
-            )
-        else:
-            parts = os.path.splitext(pipeline_config_file)
-            specialised_pipeline_config_file = (
-                parts[0]
-                + f"_{combination_i + 1}"  # NB! If PIPELINE_CONFIG is specified then do not overwrite it. Therefore we need to append combination_i for combination_i == 0 as well.
-                + parts[1]
-            )
+        plt.ion()
+        axes.figure.show()
+        plt.draw()
+        plt.pause(
+            60
+        )  # render the plot. Usually the plot is rendered quickly but sometimes it may require up to 60 sec. Else you get just a blank window
 
-        specialised_config_params_source = gridsearch_best_parameters_by_score  # TODO: config for choosing between gridsearch_best_parameters_by_score, gridsearch_best_parameters_by_sfella_score, gridsearch_best_parameters_by_score_minus_std
-        specialised_config_params_source = (
-            specialised_config_params_source.groupby(
-                gridsearch_environment_grouping_dims, sort=False
-            )
-            .nth(combination_i)
-            .dropna()
-        )  # dropna() will drop rows which match indexes missing in the source
+    # / if create_box_plots:
 
-        specialised_pipeline_config = copy.deepcopy(pipeline_config)
-        for map_size in [
-            7
-        ]:  # TODO: config, or select all available map sizes from gridsearch config
-            for env_conf_name in pipeline_config:
-                result_row_selector = (
-                    specialised_config_params_source[
-                        "gridsearch_params.hparams.env_params.map_max"
-                    ]
-                    == map_size
+    if create_specialised_pipeline_config_with_best_parameters:
+        # create a new specialised pipeline config files based on the best parameters per experiment
+        pipeline_config_file = os.environ.get("PIPELINE_CONFIG")
+        using_default_pipeline_config_file = False
+        if pipeline_config_file is None:
+            pipeline_config_file = "config_pipeline.yaml"
+            using_default_pipeline_config_file = True
+
+        pipeline_config = OmegaConf.load(
+            os.path.join("aintelope", "config", pipeline_config_file)
+        )
+
+        for combination_i in range(0, return_n_best_combinations):
+            # TODO: ensure to do not use special pipeline config when doing initial gridsearch
+            if using_default_pipeline_config_file:
+                parts = os.path.splitext(pipeline_config_file)
+                specialised_pipeline_config_file = (
+                    parts[0]
+                    + "_"
+                    + cfg.hparams.params_set_title
+                    + (
+                        "_common"
+                        if not use_separate_parameters_for_each_experiment
+                        else ""
+                    )
+                    + (f"_{combination_i + 1}" if combination_i > 0 else "")
+                    + parts[1]
                 )
-                if "experiment_name" in evals_parameter_grouping_cols:
-                    result_row_selector &= (
-                        specialised_config_params_source["experiment_name"]
-                        == env_conf_name
+            else:
+                parts = os.path.splitext(pipeline_config_file)
+                specialised_pipeline_config_file = (
+                    parts[0]
+                    + f"_{combination_i + 1}"  # NB! If PIPELINE_CONFIG is specified then do not overwrite it. Therefore we need to append combination_i for combination_i == 0 as well.
+                    + parts[1]
+                )
+
+            specialised_config_params_source = gridsearch_best_parameters_by_score  # TODO: config for choosing between gridsearch_best_parameters_by_score, gridsearch_best_parameters_by_sfella_score, gridsearch_best_parameters_by_score_minus_std
+            specialised_config_params_source = (
+                specialised_config_params_source.groupby(
+                    gridsearch_environment_grouping_dims, sort=False
+                )
+                .nth(combination_i)
+                .dropna()
+            )  # dropna() will drop rows which match indexes missing in the source
+
+            specialised_pipeline_config = copy.deepcopy(pipeline_config)
+            for map_size in [
+                7
+            ]:  # TODO: config, or select all available map sizes from gridsearch config
+                for env_conf_name in pipeline_config:
+                    result_row_selector = (
+                        specialised_config_params_source[
+                            "gridsearch_params.hparams.env_params.map_max"
+                        ]
+                        == map_size
                     )
-
-                result_row = specialised_config_params_source[result_row_selector]
-
-                if (
-                    len(result_row) > 0
-                ):  # check whether the grid search produced data for this map_max and experiment_name pair
-                    key = env_conf_name + ".env_params.map_max"
-                    value = map_size
-                    OmegaConf.update(
-                        specialised_pipeline_config, key, value, force_add=True
-                    )
-
-                    for gridsearch_col in gridsearch_cols:
-                        key = (
-                            env_conf_name
-                            + "."
-                            + gridsearch_col[len("gridsearch_params.hparams.") :]
+                    if "experiment_name" in evals_parameter_grouping_cols:
+                        result_row_selector &= (
+                            specialised_config_params_source["experiment_name"]
+                            == env_conf_name
                         )
-                        value = result_row[gridsearch_col].item()
+
+                    result_row = specialised_config_params_source[result_row_selector]
+
+                    if (
+                        len(result_row) > 0
+                    ):  # check whether the grid search produced data for this map_max and experiment_name pair
+                        key = env_conf_name + ".env_params.map_max"
+                        value = map_size
                         OmegaConf.update(
                             specialised_pipeline_config, key, value, force_add=True
                         )
 
-        # TODO: confirm overwriting existing file
-        print(f"\nWriting to {specialised_pipeline_config_file}")
-        OmegaConf.save(
-            specialised_pipeline_config,
-            os.path.join("aintelope/config", specialised_pipeline_config_file),
-            resolve=False,
-        )
+                        for gridsearch_col in gridsearch_cols:
+                            key = (
+                                env_conf_name
+                                + "."
+                                + gridsearch_col[len("gridsearch_params.hparams.") :]
+                            )
+                            value = result_row[gridsearch_col].item()
+                            OmegaConf.update(
+                                specialised_pipeline_config, key, value, force_add=True
+                            )
 
-    # / for combination_i in range(0, return_n_best_combinations):
+            # TODO: confirm overwriting existing file
+            print(f"\nWriting to {specialised_pipeline_config_file}")
+            OmegaConf.save(
+                specialised_pipeline_config,
+                os.path.join("aintelope", "config", specialised_pipeline_config_file),
+                resolve=False,
+            )
+
+        # / for combination_i in range(0, return_n_best_combinations):
+
+    # / if create_specialised_pipeline_config_with_best_parameters:
 
     wait_for_enter("\nAnalytics done. Press [enter] to continue.")
     qqq = True

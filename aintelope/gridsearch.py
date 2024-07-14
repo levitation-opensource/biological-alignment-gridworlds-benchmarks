@@ -53,7 +53,7 @@ async def run_gridsearch_experiments() -> None:
     # if gridsearch_config is None:
     #    gridsearch_config = "initial_config_gridsearch.yaml"
     initial_config_gridsearch = OmegaConf.load(
-        os.path.join("aintelope/config", gridsearch_config_file)
+        os.path.join("aintelope", "config", gridsearch_config_file)
     )
 
     # extract list parameters and compute cross product over their values
