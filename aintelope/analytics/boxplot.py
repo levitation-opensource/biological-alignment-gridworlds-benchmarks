@@ -34,6 +34,7 @@ def boxplot() -> None:
     # df["experiment_name"] = df["experiment_name"].str.replace('e_5_sustainability2', 'e_5_sustainability')
 
     df["experiment_name"] = df["experiment_name"].str.replace("_", " ")
+    df["experiment_name"] = df["experiment_name"].str[3:]  # drop experiment number
 
     plt.rcParams[
         "figure.constrained_layout.use"
