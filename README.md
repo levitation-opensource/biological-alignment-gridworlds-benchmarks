@@ -84,11 +84,3 @@ for more details.
 # Windows
 
 Aintelope code base is compatible with Windows. No extra steps needed. GPU computation works fine as well. WSL is not needed.
-
-# Differences to regular RL
-
-For alignment and cognitive research, the internal reward of the agent and 
-the actual score from the desired behaviour are measured separately. 
-The reward comes from the agent.py itself, while the desired score comes from 
-the environment (and thus the test). Both of these values are then recorded and 
-compared during analysis.
