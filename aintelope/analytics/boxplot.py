@@ -24,25 +24,24 @@ def boxplot() -> None:
     for filepath in datafiles:
         print(f"Reading {filepath}")
         with FileLock(
-            str(filepath)
-            + ".lock"  # filepath may be PosixPath, so need to convert to str
-        ):  # NB! take the lock inside the loop, not outside, so that when we are waiting for user confirmation for retry, we do not block other processes during that wait
+            str(filepath)  # filepath may be PosixPath, so need to convert to str
+            + ".lock"
+        ):
             df = pd.read_csv(filepath)
             dfs.append(df)
 
     df = pd.concat(dfs, ignore_index=True)
 
-    df = df[df["experiment_name"] != "e_5_sustainability"]
+    # e_5_sustainability was the buggy experiment I had to re-run, the re-run results are represented in data under name e_5_sustainability2
+    df = df[df["experiment_name"] != "e_5_sustainability"]  # lets hide the buggy results
     df["experiment_name"] = df["experiment_name"].str.replace(
-        "e_5_sustainability2", "e_5_sustainability"
+        "e_5_sustainability2", "e_5_sustainability"   # lets remove the number 2 sufix from plot title, so that the re-run data will look as if it is was a normal run
     )
 
     agent_type_labels_mapping = OrderedDict(
         {
             "random": "random",
-            "dqn": "industry standard (dqn)",
-            "our_version": "our version",
-            "estimated_optimum": "estimated optimum",
+            "score": "industry standard (dqn)"
         }
     )
     df["params_set_title"] = df["params_set_title"].map(agent_type_labels_mapping)
@@ -56,7 +55,11 @@ def boxplot() -> None:
     ]
 
     df["experiment_name"] = df["experiment_name"].str.replace("_", " ")
-    df["experiment_name"] = df["experiment_name"].str[3:]  # drop experiment number
+    df["experiment_name"] = df["experiment_name"].str[3:]  # drop experiment number from the label
+
+    # Seaborn does not have a good way for specifying the hue labels legend title, and the hacky ways need to change every couple of years, so lets just change the source column name
+    hue_legend_title = "agent type"
+    df.rename(columns={"params_set_title": hue_legend_title}, inplace=True)
 
     plt.rcParams[
         "figure.constrained_layout.use"
@@ -68,7 +71,7 @@ def boxplot() -> None:
         data=df,
         x="test_averages.Score",
         y="experiment_name",
-        hue="params_set_title",
+        hue=hue_legend_title,
         hue_order=hue_order,
         palette=palette,
         showfliers=False,

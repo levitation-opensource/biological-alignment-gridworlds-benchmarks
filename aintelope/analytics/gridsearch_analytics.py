@@ -34,13 +34,13 @@ from aintelope.utils import wait_for_enter, try_df_to_csv_write, RobustProgressB
 )
 def gridsearch_analytics(cfg: DictConfig) -> None:
     # TODO: command line arguments
-    gridsearch_cycle_count = 4  # max cycle count   # TODO: read from config
+    gridsearch_cycle_count = 10  # max cycle count   # TODO: read from config
     eval_cycle_count = 100  # gridsearch_cycle_count if gridsearch_cycle_count is not None else 25    # min cycle count       # TODO: read from config
 
-    create_specialised_pipeline_config_with_best_parameters = False
+    create_specialised_pipeline_config_with_best_parameters = True
     copy_log_files_of_best_parameter_combinations_to_separate_folder = False
 
-    compute_average_evals_scores_per_parameter_combination = True  # if set to false then all cycles of evals with best gridsearch parameter combination are outputted in separate rows of the output CSV file
+    compute_average_evals_scores_per_parameter_combination = False  # if set to false then all cycles of evals with best gridsearch parameter combination are outputted in separate rows of the output CSV file
     create_box_plots = False  # if you set this to True then you need to set compute_average_evals_scores_per_parameter_combination = False
     return_n_best_combinations = (
         1  # used when compute_average_evals_scores_per_parameter_combination == True

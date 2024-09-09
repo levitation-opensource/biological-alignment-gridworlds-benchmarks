@@ -17,7 +17,6 @@ class HistoryStep(NamedTuple):
     action: int
     reward: float
     done: bool
-    instinct_events: List[Tuple[str, int]]
     next_state: Tuple[npt.NDArray[ObservationFloat], npt.NDArray[ObservationFloat]]
 
 
@@ -28,7 +27,6 @@ class QAgent(Agent):
         self,
         agent_id: str,
         trainer: Trainer,
-        target_instincts: List[str] = [],
     ) -> None:
         self.id = agent_id
         self.trainer = trainer
@@ -115,7 +113,6 @@ class QAgent(Agent):
         self.last_action = action
         return action
 
-    # TODO hack, figure out if state_to_namedtuple can be static somewhere
     def update(
         self,
         env: PettingZooEnv = None,
@@ -130,7 +127,6 @@ class QAgent(Agent):
     ) -> list:
         """
         Takes observations and updates trainer on perceived experiences.
-        Needed here to catch instincts.
 
         Args:
             env: Environment
@@ -161,7 +157,6 @@ class QAgent(Agent):
         #        action=self.last_action,
         #        reward=score,
         #        done=done,
-        #        instinct_events=[],
         #        next_state=next_s_hist,
         #    )
         # )

@@ -1,6 +1,6 @@
 from typing import Mapping, Type
 from aintelope.agents.abstract_agent import Agent
-from aintelope.agents.instinct_agent import InstinctAgent
+
 from aintelope.agents.q_agent import QAgent
 from aintelope.agents.simple_agents import (
     IterativeWeightOptimizationAgent,
@@ -30,4 +30,4 @@ register_agent_class(
     "iterative_weight_optimization_agent", IterativeWeightOptimizationAgent
 )
 register_agent_class("q_agent", QAgent)
-register_agent_class("instinct_agent", InstinctAgent)
+

@@ -108,7 +108,6 @@ def run_episode(full_params: Dict) -> None:
                 get_agent_class(agent)(
                     agent_id=f"agent_{i}",
                     trainer=trainer,
-                    target_instincts=[],
                 )
                 for agent in agent_spec
             ]
@@ -119,7 +118,6 @@ def run_episode(full_params: Dict) -> None:
             get_agent_class(agent_spec)(
                 agent_id=f"agent_{i}",
                 trainer=trainer,
-                target_instincts=[],
             )
             for i in range(env_params["amount_agents"])
         ]

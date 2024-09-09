@@ -514,7 +514,6 @@ class GridworldZooBaseEnv:
         else:
             return self.observations2[agent]
 
-    # This API is intended primarily as input for the instincts, documenting the order of layers in observation cube
     def relative_observation_layers_order(
         self, agent=None
     ) -> Union[Dict[AgentId, Observation], Observation]:
@@ -526,7 +525,6 @@ class GridworldZooBaseEnv:
         else:
             return self._last_infos[agent][INFO_AGENT_OBSERVATION_LAYERS_ORDER]
 
-    # This API is intended primarily as input for the instincts, documenting the order of layers in observation cube
     def absolute_observation_layers_order(
         self, agent=None
     ) -> Union[Dict[AgentId, Observation], Observation]:
@@ -576,8 +574,6 @@ class GridworldZooBaseEnv:
         else:
             return self._last_infos[agent][INFO_OBSERVATION_LAYERS_CUBE]
 
-    # This API might be useful as input to instincts.
-    # For instincts it has more convenient data format than bitmap.
     def observe_relative_coordinates(
         self, agent=None
     ) -> Union[Dict[AgentId, Observation], Observation]:
@@ -589,8 +585,6 @@ class GridworldZooBaseEnv:
         else:
             return self._last_infos[agent][INFO_AGENT_OBSERVATION_COORDINATES]
 
-    # This API might be useful as input to instincts.
-    # For instincts it has more convenient data format than bitmap.
     def observe_absolute_coordinates(
         self, agent=None
     ) -> Union[Dict[AgentId, Observation], Observation]:

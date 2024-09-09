@@ -9,7 +9,6 @@ def constants() -> DictConfig:
     constants_dict = {
         "PROJECT": "aintelope",
         "BASELINE": "run-training-baseline",
-        "INSTINCT": "run-training-instinct",
     }
     return OmegaConf.create(constants_dict)
 

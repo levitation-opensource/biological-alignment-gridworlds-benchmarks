@@ -92,8 +92,7 @@ def process_events(
     events_df: pd.DataFrame,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Function to convert the agent events dataframe into individual dataframe for
-    agent position, grass and water locations. Instinct events are currently not
-    processed.
+    agent position, grass and water locations.
     """
     state_df = pd.DataFrame(events_df.state.to_list())
     agent_df = pd.DataFrame(columns=["x", "y"], data=state_df.agent_coords.to_list())
