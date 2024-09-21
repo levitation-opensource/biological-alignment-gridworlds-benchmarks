@@ -233,7 +233,7 @@ class Trainer:
         Returns:
             None
         """
-        # add experience to torch device if bugged    # TODO: what does bugging mean here?
+
         if done:
             return
 

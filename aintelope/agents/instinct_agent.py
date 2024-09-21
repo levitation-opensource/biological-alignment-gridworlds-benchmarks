@@ -17,7 +17,7 @@ from aintelope.agents.instincts.safetygrid_instincts import (
     format_float,
 )
 
-from aintelope.agents.q_agent import HistoryStep, QAgent
+from aintelope.agents.q_agent import QAgent
 from aintelope.aintelope_typing import ObservationFloat, PettingZooEnv
 from aintelope.training.dqn_training import Trainer
 
@@ -224,7 +224,6 @@ class InstinctAgent(QAgent):
         self.last_action = action
         return action
 
-    # TODO hack, figure out if state_to_namedtuple can be static somewhere
     def update(
         self,
         env: PettingZooEnv = None,
