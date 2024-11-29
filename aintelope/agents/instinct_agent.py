@@ -10,6 +10,8 @@ from typing import List, Optional, Tuple
 from collections import defaultdict
 from gymnasium.spaces import Discrete
 
+from omegaconf import DictConfig
+
 import numpy as np
 import numpy.typing as npt
 
@@ -45,6 +47,7 @@ class InstinctAgent(QAgent):
         agent_id: str,
         trainer: Trainer,
         env: Environment,
+        cfg: DictConfig = None,
         target_instincts: List[str] = [],
     ) -> None:
         self.target_instincts = target_instincts

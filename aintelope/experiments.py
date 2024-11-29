@@ -74,6 +74,7 @@ def run_experiment(
                 agent_id,
                 trainer,
                 env,
+                cfg,
                 **cfg.hparams.agent_params,
             )
         )
@@ -494,6 +495,7 @@ def run_baseline_training(cfg: DictConfig):
                 agent_id=agent_id,
                 trainer=None,
                 env=env,
+                cnf=cfg,
             )
         )
 

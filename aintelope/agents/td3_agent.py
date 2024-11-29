@@ -2,6 +2,8 @@ import logging
 from typing import List, NamedTuple, Optional, Tuple
 from gymnasium.spaces import Discrete
 
+from omegaconf import DictConfig
+
 import numpy as np
 import numpy.typing as npt
 import os
@@ -47,13 +49,13 @@ class TD3Agent:
         agent_id: str,
         trainer: Trainer,
         env: Environment,
+        cfg: DictConfig,
         target_instincts: List[
             str
         ] = [],  # unused, argument present for compatibility with other agents
     ) -> None:
         self.id = agent_id
-        self.trainer = None
-        self.hparams = None
+        self.cfg = cfg
         self.done = False
         self.last_action = None
         env = ss.pettingzoo_env_to_vec_env_v1(env)

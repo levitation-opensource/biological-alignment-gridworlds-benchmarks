@@ -2,6 +2,8 @@ import logging
 from typing import List, NamedTuple, Optional, Tuple
 from gymnasium.spaces import Discrete
 
+from omegaconf import DictConfig
+
 import numpy as np
 import numpy.typing as npt
 import os
@@ -57,13 +59,13 @@ class PPOAgent:
         agent_id: str,
         trainer: Trainer,
         env: Environment,
+        cfg: DictConfig,
         target_instincts: List[
             str
         ] = [],  # unused, argument present for compatibility with other agents
     ) -> None:
         self.id = agent_id
-        self.trainer = None
-        self.hparams = None
+        self.cfg = cfg
         self.done = False
         self.last_action = None
 
@@ -174,8 +176,8 @@ class PPOAgent:
     #    self.model.set_env(env)
 
     def save_model(self):
-        dir_out = os.path.normpath(self.params.log_dir)
-        checkpoint_dir = os.path.normpath(self.params.checkpoint_dir)
+        dir_out = os.path.normpath(self.cfg.log_dir)
+        checkpoint_dir = os.path.normpath(self.cfg.checkpoint_dir)
         path = os.path.join(dir_out, checkpoint_dir)
         os.makedirs(path, exist_ok=True)
         checkpoint_filename = self.params.experiment_name + "_" + self.id

@@ -8,6 +8,8 @@ import logging
 from typing import List, NamedTuple, Optional, Tuple
 from gymnasium.spaces import Discrete
 
+from omegaconf import DictConfig
+
 import numpy as np
 import numpy.typing as npt
 
@@ -42,6 +44,7 @@ class QAgent(Agent):
         agent_id: str,
         trainer: Trainer,
         env: Environment,
+        cfg: DictConfig = None,
         target_instincts: List[
             str
         ] = [],  # unused, argument present for compatibility with other agents
