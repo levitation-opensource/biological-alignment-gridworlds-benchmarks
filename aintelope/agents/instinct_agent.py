@@ -10,6 +10,8 @@ from typing import List, Optional, Tuple
 from collections import defaultdict
 from gymnasium.spaces import Discrete
 
+from omegaconf import DictConfig
+
 import numpy as np
 import numpy.typing as npt
 
@@ -27,6 +29,13 @@ from aintelope.agents.q_agent import QAgent
 from aintelope.aintelope_typing import ObservationFloat, PettingZooEnv
 from aintelope.training.dqn_training import Trainer
 
+from typing import Union
+import gymnasium as gym
+from pettingzoo import AECEnv, ParallelEnv
+
+PettingZooEnv = Union[AECEnv, ParallelEnv]
+Environment = Union[gym.Env, PettingZooEnv]
+
 logger = logging.getLogger("aintelope.agents.instinct_agent")
 
 
@@ -37,6 +46,8 @@ class InstinctAgent(QAgent):
         self,
         agent_id: str,
         trainer: Trainer,
+        env: Environment,
+        cfg: DictConfig = None,
         target_instincts: List[str] = [],
     ) -> None:
         self.target_instincts = target_instincts
@@ -45,6 +56,7 @@ class InstinctAgent(QAgent):
         super().__init__(
             agent_id=agent_id,
             trainer=trainer,
+            env=env,
         )
 
     def reset(self, state, info, env_class) -> None:
@@ -293,10 +305,10 @@ class InstinctAgent(QAgent):
             # print(f"reward: {reward}")
         # interruption done
 
-        if next_state is not None:
-            next_s_hist = next_state
-        else:
-            next_s_hist = None
+        # if next_state is not None:
+        #    next_s_hist = next_state
+        # else:
+        #    next_s_hist = None
         # self.history.append(
         #    HistoryStep(
         #        state=self.state,

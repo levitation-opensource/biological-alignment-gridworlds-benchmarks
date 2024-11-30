@@ -8,12 +8,21 @@ import logging
 from typing import List, NamedTuple, Optional, Tuple
 from gymnasium.spaces import Discrete
 
+from omegaconf import DictConfig
+
 import numpy as np
 import numpy.typing as npt
 
 from aintelope.agents import Agent
 from aintelope.aintelope_typing import ObservationFloat, PettingZooEnv
 from aintelope.training.dqn_training import Trainer
+
+from typing import Union
+import gymnasium as gym
+from pettingzoo import AECEnv, ParallelEnv
+
+PettingZooEnv = Union[AECEnv, ParallelEnv]
+Environment = Union[gym.Env, PettingZooEnv]
 
 logger = logging.getLogger("aintelope.agents.q_agent")
 
@@ -34,6 +43,8 @@ class QAgent(Agent):
         self,
         agent_id: str,
         trainer: Trainer,
+        env: Environment,
+        cfg: DictConfig = None,
         target_instincts: List[
             str
         ] = [],  # unused, argument present for compatibility with other agents
@@ -158,10 +169,10 @@ class QAgent(Agent):
 
         next_state = observation
 
-        if next_state is not None:
-            next_s_hist = next_state
-        else:
-            next_s_hist = None
+        # if next_state is not None:
+        #    next_s_hist = next_state
+        # else:
+        #    next_s_hist = None
         # self.history.append(
         #    HistoryStep(
         #        state=self.state,
