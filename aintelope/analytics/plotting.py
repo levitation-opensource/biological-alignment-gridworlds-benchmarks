@@ -55,7 +55,9 @@ def filter_train_and_test_events(
     score_dimensions = ["Reward"] + score_dimensions
     events[score_dimensions] = events[score_dimensions].astype(float)
 
-    if group_by_pipeline_cycle:
+    if (
+        group_by_pipeline_cycle
+    ):  # TODO: perhaps this branch is not needed and the "IsTest" column is sufficient in all cases?
         train_events = events[events["Pipeline cycle"] < num_train_pipeline_cycles]
         test_events = events[events["Pipeline cycle"] >= num_train_pipeline_cycles]
     else:
