@@ -46,6 +46,7 @@ class ExampleAgent(Agent):
         self.trainer = trainer
         self.env = env
         self.cfg = cfg
+        self.done = False
 
     def reset(self, state, info, env_class) -> None:
         """Resets self and updates the state."""
