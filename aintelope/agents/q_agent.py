@@ -127,7 +127,7 @@ class QAgent(Agent):
         assert self.last_action is not None
 
         next_state = observation
-        
+
         # TODO
 
         event = [self.id, self.state, self.last_action, score, done, next_state]
