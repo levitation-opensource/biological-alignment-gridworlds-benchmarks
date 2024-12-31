@@ -191,7 +191,6 @@
 
 e_9_food_sharing:
   env_params:
-    num_iters: 800      # The number of iters is doubled since there are two agents and currently the environment sums the step counts of both agents when counting towards the step limit. Because the agents do not share weights, they still need 400 steps each.
     env_experiment: "ai_safety_gridworlds.aintelope_savanna"
     # num_iters: 100 # TODO: if you override this here then you need to override also eps_last_frame! duration of a single episode. NB! warm_start_steps will be subtracted from this value
     amount_agents: 2            # NB! two agents
