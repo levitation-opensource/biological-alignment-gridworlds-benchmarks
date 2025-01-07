@@ -32,7 +32,6 @@ def test_example_agent_in_savanna_gridworlds_parallel(
             "num_iters": 40,  # duration of the game
             "map_min": 0,
             "map_max": 20,
-            "render_map_max": 20,
             "amount_agents": 1,  # for now only one agent
             "amount_grass_patches": 2,
             "amount_water_holes": 0,
@@ -60,7 +59,6 @@ def test_randomwalkagent_in_savanna_gridworlds_parallel(
             "num_iters": 40,  # duration of the game
             "map_min": 0,
             "map_max": 20,
-            "render_map_max": 20,
             "amount_agents": 1,  # for now only one agent
             "amount_grass_patches": 2,
             "amount_water_holes": 0,
@@ -88,7 +86,6 @@ def test_randomwalkagent_in_savanna_gridworlds_parallel(
 #            "num_iters": 40,  # duration of the game
 #            "map_min": 0,
 #            "map_max": 20,
-#            "render_map_max": 20,
 #            "amount_agents": 1,  # for now only one agent
 #            "amount_grass_patches": 2,
 #            "amount_water_holes": 0,
@@ -118,7 +115,6 @@ def test_randomwalkagent_in_savanna_gridworlds_parallel(
 #            "num_iters": 40,  # duration of the game
 #            "map_min": 0,
 #            "map_max": 20,
-#            "render_map_max": 20,
 #            "amount_agents": 1,  # for now only one agent
 #            "amount_grass_patches": 2,
 #            "amount_water_holes": 0,
