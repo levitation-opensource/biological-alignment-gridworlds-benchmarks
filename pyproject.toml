@@ -1,6 +1,6 @@
 [project]
 name = "aintelope"
-version = "0.1.0"
+version = "0.9.0"
 description = "Simulate agents with reinforcement learning over selected cue-response patterns"
 readme = "README.md"
 authors = [
@@ -30,6 +30,8 @@ ai_safety_gridworlds
 | outputs
 | pettingzoo
 | pycolab
+| stable_baselines3
+| supersuit
 | \.vshistory
 )/
 '''

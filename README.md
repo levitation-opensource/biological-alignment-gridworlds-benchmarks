@@ -153,13 +153,11 @@ Run the following:
   `make run-training-baseline`
   `make run-training-instinct`
 
-## Logging
-
-TODO
 
 ## Windows
 
 Aintelope code base is compatible with Windows. No extra steps needed. GPU computation works fine as well. WSL is not needed.
+
 
 # Differences to regular RL
 
