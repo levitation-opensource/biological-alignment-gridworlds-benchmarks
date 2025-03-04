@@ -33,7 +33,7 @@ class ZooParallelEnvTemplate(ParallelEnv):
         return Discrete(5)
 
     def reset(self, seed=None, options=None, *args, **kwargs):
-        self.agents = list(self.possible_agents)  # clone list
+        self.agents = list(self.possible_agents)  # clone the list
         self.num_moves = 0
         observations = {agent: None for agent in self.agents}
         infos = {agent: {} for agent in self.agents}
@@ -44,6 +44,15 @@ class ZooParallelEnvTemplate(ParallelEnv):
     def step(self, actions: Dict[str, int]):
         if not actions:  # empty dict
             return {}, {}, {}, {}, {}
+
+        for agent, action in actions.items():
+            if (
+                action is None
+            ):  # Agent is dead. Dead agents receive one None action call because of Zoo standard.
+                pass
+
+            # do your action handling here
+        # / for agent, action in actions.items():
 
         # rewards for all agents are placed in the rewards dictionary to be returned
         rewards = {}
