@@ -6,7 +6,6 @@
 
 hparams:
   gridsearch_trial_no: ${range:10,100}        # used just to repeat same experiment multiple times
-  params_set_title: "score"
   batch_size: 16
   lr: 0.015
   amsgrad: True
