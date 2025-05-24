@@ -232,7 +232,7 @@ e_9_food_sharing:
 #    amount_agents: 1 
 #    amount_grass_patches: 1
 #    scores:
-#        FOOD_SCORE: '{"FOOD": 1}'
+#        FOOD_SCORE: '{"FOOD": 20}'
    
 #test13:      # 4x4 inner map       # agent is up left, food is bottom right
 #  model_params:
@@ -248,7 +248,7 @@ e_9_food_sharing:
 #    amount_agents: 1 
 #    amount_grass_patches: 1
 #    scores:
-#        FOOD_SCORE: '{"FOOD": 1}'
+#        FOOD_SCORE: '{"FOOD": 20}'
    
 #test14:      # 5x5 inner map       # agent is up left, food is bottom right
 #  model_params:
@@ -264,7 +264,7 @@ e_9_food_sharing:
 #    amount_agents: 1 
 #    amount_grass_patches: 1
 #    scores:
-#        FOOD_SCORE: '{"FOOD": 1}'
+#        FOOD_SCORE: '{"FOOD": 20}'
    
 #test15:      # 6x6 inner map       # agent is up left, food is bottom right
 #  env_params:
@@ -278,7 +278,7 @@ e_9_food_sharing:
 #    amount_agents: 1 
 #    amount_grass_patches: 1
 #    scores:
-#        FOOD_SCORE: '{"FOOD": 1}'
+#        FOOD_SCORE: '{"FOOD": 20}'
    
 #test16:      # 7x7 inner map       # agent is up left, food is bottom right
 #  model_params:
@@ -294,7 +294,7 @@ e_9_food_sharing:
 #    amount_agents: 1 
 #    amount_grass_patches: 1
 #    scores:
-#        FOOD_SCORE: '{"FOOD": 1}'
+#        FOOD_SCORE: '{"FOOD": 20}'
    
 #test17:      # 8x8 inner map       # agent is up left, food is bottom right
 #  env_params:
@@ -308,7 +308,7 @@ e_9_food_sharing:
 #    amount_agents: 1 
 #    amount_grass_patches: 1
 #    scores:
-#        FOOD_SCORE: '{"FOOD": 1}'
+#        FOOD_SCORE: '{"FOOD": 20}'
 
 
 
@@ -342,7 +342,7 @@ e_9_food_sharing:
 #    amount_agents: 1 
 #    amount_grass_patches: 1
 #    scores:
-#        FOOD_SCORE: '{"FOOD": 1}'
+#        FOOD_SCORE: '{"FOOD": 20}'
     
 #test12:      # 1x8 inner map     # agent is at left end, food is at right end. Only LEFT, RIGHT, and NOP actions are available in this environment
 #  env_params:
@@ -356,5 +356,5 @@ e_9_food_sharing:
 #    amount_agents: 1 
 #    amount_grass_patches: 1
 #    scores:
-#        FOOD_SCORE: '{"FOOD": 1}'
+#        FOOD_SCORE: '{"FOOD": 20}'
 
