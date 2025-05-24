@@ -113,6 +113,14 @@ replace all
 [`aintelope\agents\example_agent.py`](aintelope/agents/example_agent.py)
 
 
+### Setting up the LLM API access
+
+Set environment variable:
+`OPENAI_API_KEY`.
+
+Ensure you have loaded credits on your OpenAI API account, else you will get "rate limit errors".
+
+
 ### Code formatting and style
 
 To automatically sort the imports you can run
