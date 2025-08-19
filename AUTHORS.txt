@@ -1,18 +1,18 @@
-Total commits: 1061
-Total ctimes: 6070
-Total files: 282
-Total loc: 25991
+Total commits: 1071
+Total ctimes: 6304
+Total files: 283
+Total loc: 26904
 | Author                    |   loc |   coms |   fils |  distribution   |
 |:--------------------------|------:|-------:|-------:|:----------------|
-| Roland Pihlakas           | 22138 |    521 |    155 | 85.2/49.1/55.0  |
-| Joel Pyykkö               |  2437 |    159 |     37 | 9.4/15.0/13.1   |
-| derdre                    |   441 |     62 |     27 | 1.7/ 5.8/ 9.6   |
-| U-SKETCHER\Gunnar Zarncke |   392 |     12 |     12 | 1.5/ 1.1/ 4.3   |
-| a.kochanke                |   336 |    145 |     24 | 1.3/13.7/ 8.5   |
+| Roland Pihlakas           | 23057 |    531 |    156 | 85.7/49.6/55.1  |
+| Joel Pyykkö               |  2431 |    159 |     37 | 9.0/14.8/13.1   |
+| derdre                    |   441 |     62 |     27 | 1.6/ 5.8/ 9.5   |
+| U-SKETCHER\Gunnar Zarncke |   392 |     12 |     12 | 1.5/ 1.1/ 4.2   |
+| a.kochanke                |   336 |    145 |     24 | 1.2/13.5/ 8.5   |
 | Gunnar Zarncke            |   127 |      1 |      1 | 0.5/ 0.1/ 0.4   |
-| Nathan Helm-Burger        |    81 |     63 |     12 | 0.3/ 5.9/ 4.3   |
+| Nathan Helm-Burger        |    81 |     63 |     12 | 0.3/ 5.9/ 4.2   |
 | ak                        |    15 |      1 |      3 | 0.1/ 0.1/ 1.1   |
-| Hauke Rehfeld             |    11 |     57 |      4 | 0.0/ 5.4/ 1.4   |
+| Hauke Rehfeld             |    11 |     57 |      4 | 0.0/ 5.3/ 1.4   |
 | Orpheus Lummis            |     9 |      2 |      3 | 0.0/ 0.2/ 1.1   |
 | postuur                   |     4 |     36 |      4 | 0.0/ 3.4/ 1.4   |
 | NathanNeuro               |     0 |      2 |      0 | 0.0/ 0.2/ 0.0   |

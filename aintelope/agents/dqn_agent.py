@@ -78,26 +78,33 @@ class ExpertOverrideMixin:
         episode = self.info["i_episode"]
         pipeline_cycle = self.info["i_pipeline_cycle"]
         test_mode = self.info["test_mode"]
-        override_type = (
+
+        obs_nps = obs.detach().cpu().numpy()
+        obs_np = obs_nps[0, :]
+
+        (override_type, _random) = (
             self.expert.should_override(
+                deterministic,
                 step,
                 episode,
                 pipeline_cycle,
+                test_mode,
+                obs_np,
             )
             if not test_mode
             else 0
         )
         if override_type != 0:
-            obs_nps = obs.detach().cpu().numpy()
-            obs_np = obs_nps[0, :]
             action = self.expert.get_action(
-                observation=obs_np,
-                info=self.info,
-                step=step,
-                episode=episode,
-                pipeline_cycle=pipeline_cycle,
-                override_type=override_type,
-                deterministic=deterministic,
+                obs_np,
+                self.info,
+                step,
+                episode,
+                pipeline_cycle,
+                test_mode,
+                override_type,
+                deterministic,
+                _random,
             )
             # TODO: handle multiple observations and actions (for that we need also multiple infos)
             actions = [action]

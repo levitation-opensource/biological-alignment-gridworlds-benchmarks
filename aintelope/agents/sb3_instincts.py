@@ -6,9 +6,11 @@
 
 import csv
 import logging
+import hashlib
 from typing import List, Optional, Tuple
 from collections import defaultdict
 from gymnasium.spaces import Discrete
+from gymnasium.utils import seeding
 
 from omegaconf import DictConfig
 
@@ -64,34 +66,58 @@ class SB3Instincts(object):
     def reset(self) -> None:
         self.init_instincts()
 
-    def tiebreaking_argmax(self, arr, deterministic):
+    # # NB! this method assumes that there is no hidden state that would affect the instinct action choice. Though it might be not a big deal either way.
+    # # Currently this method is not actually used, because "deterministic" argument is set only during evaluation, not training.
+    # def seed_from_observation(self, obs_np, round_decimals: int = 4):
+    #     obs_rounded = np.round(obs_np, round_decimals)    # round so that states (potentially) differing only by floating point drift still get same tie breaking. This does not hurt (in case the states actually differ but are rounded to be equal), but makes the algorithm more robust in cases where the states differ only because of numeric stability issues.
+    #     h = hashlib.blake2b(obs_rounded.tobytes(), digest_size=8, usedforsecurity=False).digest()  # blake2b is faster than sha1
+    #     # h = hashlib.sha1(obs_rounded.tobytes(), usedforsecurity=False).digest()
+    #     seed = int.from_bytes(h, "little", signed=False)
+    #     return seed
+
+    def tiebreaking_argmax(
+        self,
+        arr,
+        _random=None,
+    ):
         """Avoids the agent from repeatedly taking move-left action when the instinct tells the agent to move away from current cell in any direction. Then the instinct will not provide any q value difference in its q values for the different directions, they would be equal. Naive np.argmax would just return the index of first moving action, which happens to be always move-left action."""
 
-        if deterministic:
-            return np.argmax(
-                arr
-            )  # TODO: still use below code, but use seed = ((pipeline_cycle * 10000 + episode) * 1000) + step
+        max_values_bitmap = np.isclose(arr, arr.max())
+        max_values_indexes = np.flatnonzero(max_values_bitmap)
+
+        if (
+            len(max_values_indexes) == 0
+        ):  # Happens when all values are infinities or nans. This would cause np.random.choice to throw.
+            # result = np.random.randint(0, len(arr))
+            result = int(_random.random() * len(arr))
         else:
-            max_values_bitmap = np.isclose(arr, arr.max())
-            max_values_indexes = np.flatnonzero(max_values_bitmap)
+            result = _random.choice(
+                max_values_indexes
+            )  # TODO: seed for this random generator
 
-            if (
-                len(max_values_indexes) == 0
-            ):  # Happens when all values are infinities or nans. This would cause np.random.choice to throw.
-                result = np.random.randint(0, len(arr))
-            else:
-                result = np.random.choice(
-                    max_values_indexes
-                )  # TODO: seed for this random generator
-
-            return result
+        return result
 
     def should_override(
         self,
+        deterministic: bool = False,  # This is set only during evaluation, not training and the meaning is that the agent is greedy - it takes the best action. It does NOT mean that the action is always same.
         step: int = 0,
         episode: int = 0,
         pipeline_cycle: int = 0,
+        test_mode: bool = False,
+        observation=None,
     ) -> int:
+        if test_mode:
+            return 0, None
+
+        # if deterministic:
+        #     #  still use below random tiebreaking code, but use seed = ((pipeline_cycle * 10000 + episode) * 1000) + step
+        #     # seed = ((pipeline_cycle * 10000 + episode) * 1000) + step
+        #     seed = self.seed_from_observation(observation)
+        #     _random = seeding.np_random(seed)[0]
+        # else:
+        #     _random = np.random
+        _random = np.random
+
         # TODO: warn if last_frame=0/1 or last_env_layout_seed=0/1 or last_episode=0/1 in any of the below values: for disabling the epsilon counting for corresponding variable one should use -1
         epsilon = (
             self.hparams.model_params.eps_start - self.hparams.model_params.eps_end
@@ -145,24 +171,24 @@ class SB3Instincts(object):
         if (
             not apply_instinct_eps_before_random_eps
             and epsilon > 0
-            and np.random.random() < epsilon
+            and _random.random() < epsilon
         ):
-            return 2
+            return 2, _random
 
         elif (
-            instinct_epsilon > 0 and np.random.random() < instinct_epsilon
+            instinct_epsilon > 0 and _random.random() < instinct_epsilon
         ):  # TODO: find a better way to combine epsilon and instinct_epsilon
-            return 1
+            return 1, _random
 
         elif (
             apply_instinct_eps_before_random_eps
             and epsilon > 0
-            and np.random.random() < epsilon
+            and _random.random() < epsilon
         ):
-            return 2
+            return 2, _random
 
         else:
-            return 0
+            return 0, None
 
     def get_action(
         self,
@@ -171,17 +197,16 @@ class SB3Instincts(object):
         step: int = 0,
         episode: int = 0,
         pipeline_cycle: int = 0,
+        test_mode: bool = False,
         override_type: int = 0,
-        deterministic: bool = False,  # TODO
+        deterministic: bool = False,  # This is set only during evaluation, not training and the meaning is that the agent is greedy - it takes the best action. It does NOT mean that the action is always same.
+        _random=None,
     ) -> Optional[int]:
         """Given an observation, ask your rules what to do.
 
         Returns:
             action (Optional[int]): index of action
         """
-
-        # print(f"Epsilon: {epsilon}")
-        # print(f"Instinct bias epsilon: {instinct_epsilon}")
 
         action_space = self.action_space
         if isinstance(action_space, Discrete):
@@ -232,10 +257,14 @@ class SB3Instincts(object):
             override_type == 1
         ):  # TODO: find a better way to combine epsilon and instinct_epsilon
             q_values = np.zeros([max_action - min_action + 1], np.float32)
-            for action, bias in instinct_q_values.items():
-                q_values[action - min_action] = bias
+            for action, q_value in instinct_q_values.items():
+                q_values[action - min_action] = q_value
             action = (
-                self.tiebreaking_argmax(q_values, deterministic) + min_action
+                self.tiebreaking_argmax(
+                    q_values,
+                    _random,
+                )
+                + min_action
             )  # take best action predicted by instincts
 
         else:
